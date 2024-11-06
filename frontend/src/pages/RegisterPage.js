@@ -12,14 +12,14 @@ const RegisterPage = () => {
     const handleRegister = async () => {
         try {
             // Register the user
-            await axios.post('http://localhost:5000/api/auth/register', {
+            await axios.post('http://localhost:5001/api/auth/register', {
                 name,
                 email,
                 password,
             });
             
             // Automatically log in after registration
-            const loginResponse = await axios.post('http://localhost:5000/api/auth/login', {
+            const loginResponse = await axios.post('http://localhost:5001/api/auth/login', {
                 email,
                 password,
             });
