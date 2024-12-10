@@ -20,8 +20,26 @@ const registerUser = async (req, res) => {
         const newUser = new User({ name, email, password: hashedPassword, role });
         await newUser.save();
 
-        res.status(201).json({ message: 'User registered successfully' });
+         // Generate token immediately after registration
+         const token = jwt.sign(
+            { id: newUser._id, email: newUser.email, role: newUser.role },
+            process.env.JWT_SECRET,
+            { expiresIn: '24h' }
+        );
+
+        // Return token with success message
+        res.status(201).json({ 
+            message: 'User registered successfully',
+            token,
+            user: {
+                id: newUser._id,
+                name: newUser.name,
+                email: newUser.email,
+                role: newUser.role
+            }
+        });
     } catch (error) {
+        console.error('Registration error:', error);
         res.status(500).json({ message: 'Server error' });
     }
 };
@@ -37,7 +55,7 @@ const loginUser = async (req, res) => {
             return res.status(400).json({ message: 'Invalid email or password' });
         }
 
-        // Debugging: Log the user data retrieved from the database
+        // Debugging// the user data retrieved from the database
         console.log('User found:', user);
 
         // Check if the password is correct
@@ -46,13 +64,25 @@ const loginUser = async (req, res) => {
             return res.status(400).json({ message: 'Invalid email or password' });
         }
 
-        // Generate a JWT token
-        const token = jwt.sign({ userId: user._id, role: user.role }, process.env.JWT_SECRET, {
-            expiresIn: '1h',
-        });
+       // Generate token with same structure as registration
+       const token = jwt.sign(
+        { id: user._id, email: user.email, role: user.role },
+        process.env.JWT_SECRET,
+        { expiresIn: '24h' }
+    );
 
-        res.json({ token, user: { name: user.name, email: user.email, role: user.role } });
+        // Return consistent response structure
+        res.json({ 
+            token,
+            user: {
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role
+            }
+        });
     } catch (error) {
+        console.error('Login error:', error);
         res.status(500).json({ message: 'Server error' });
     }
 };

@@ -11,27 +11,23 @@ const RegisterPage = () => {
 
     const handleRegister = async () => {
         try {
-            // Register the user
-            await axios.post('http://localhost:5001/api/auth/register', {
+            const response = await axios.post('http://localhost:5001/api/auth/register', {
                 name,
                 email,
                 password,
             });
-            
-            // Automatically log in after registration
-            const loginResponse = await axios.post('http://localhost:5001/api/auth/login', {
-                email,
-                password,
-            });
 
-            console.log('Login success after registration:', loginResponse.data);
-            localStorage.setItem('token', loginResponse.data.token); // Store the JWT token
-            alert('Registration and login successful!');
-            navigate('/dashboard'); // Redirect to the dashboard
+            // Store token and user data
+            localStorage.setItem('token', response.data.token);
+            localStorage.setItem('userData', JSON.stringify(response.data.user));
+            
+            alert('Registration successful!');
+            navigate('/home'); // Navigate to home screen after registration
         } catch (error) {
-            console.error('Registration or login error:', error);
-            setError('Registration failed. Please try again.');
+            console.error('Registration error:', error.response?.data?.message || 'Registration failed');
+            setError(error.response?.data?.message || 'Registration failed. Please try again.');
         }
+
     };
 
     return (

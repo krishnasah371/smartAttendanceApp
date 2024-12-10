@@ -14,13 +14,16 @@ const LoginPage = () => {
                 email,
                 password,
             });
-            console.log('Login success:', response.data);
-            localStorage.setItem('token', response.data.token); // Store the JWT token
+
+            // Store token and user data consistently
+            localStorage.setItem('token', response.data.token);
+            localStorage.setItem('userData', JSON.stringify(response.data.user));
+            
             alert('Login successful!');
-            navigate('/dashboard'); // Redirect to the dashboard
+            navigate('/home'); // Navigate to home screen after login
         } catch (error) {
-            console.error('Login error:', error);
-            setError('Invalid email or password. Please try again.');
+            console.error('Login error:', error.response?.data?.message || 'Login failed');
+            setError(error.response?.data?.message || 'Invalid email or password.');
         }
     };
 
