@@ -5,6 +5,7 @@ import (
 
 	"github.com/krishnasah371/smartAttendanceApp/backend/cmd/server"
 	"github.com/krishnasah371/smartAttendanceApp/backend/config"
+	"github.com/krishnasah371/smartAttendanceApp/backend/pkg/database"
 	"github.com/krishnasah371/smartAttendanceApp/backend/pkg/logger"
 
 	utils "github.com/krishnasah371/smartAttendanceApp/backend/pkg"
@@ -20,6 +21,9 @@ func main() {
 	// Ensure GIN_MODE is explicitly set (default to "release" for safety)
 	ginMode := config.GetEnv("GIN_MODE", "release")
 	command := utils.ParseCommand()
+
+	// Initialize the database
+	database.InitDB()
 
 	switch command {
 	case "server":

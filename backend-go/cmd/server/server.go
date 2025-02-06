@@ -3,6 +3,7 @@ package server
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/krishnasah371/smartAttendanceApp/backend/config"
+	"github.com/krishnasah371/smartAttendanceApp/backend/internal/auth"
 	"github.com/krishnasah371/smartAttendanceApp/backend/pkg/logger"
 
 	"github.com/rs/zerolog/log"
@@ -15,7 +16,7 @@ func Start(ginMode string) {
 	}
 
 	gin.SetMode(ginMode)
-	SERVER_PORT := config.GetEnv("SERVER_PORT", "8090")
+	SERVER_PORT := config.GetEnv("SERVER_PORT", "8080")
 
 	router := gin.New()
 
@@ -29,6 +30,10 @@ func Start(ginMode string) {
 
 	// Set truseted proxies to empty for safety reasons.
 	router.SetTrustedProxies(nil)
+
+	// Register module routes
+	api := router.Group("/api")
+	auth.RegisterRoutes(api)
 
 	log.Info().Str("port", SERVER_PORT).Msg("📢 Server has started")
 	err := router.Run("localhost:" + SERVER_PORT)
