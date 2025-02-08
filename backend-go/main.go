@@ -8,7 +8,7 @@ import (
 	"github.com/krishnasah371/smartAttendanceApp/backend/pkg/database"
 	"github.com/krishnasah371/smartAttendanceApp/backend/pkg/logger"
 
-	utils "github.com/krishnasah371/smartAttendanceApp/backend/pkg"
+	utils "github.com/krishnasah371/smartAttendanceApp/backend/pkg/utils"
 )
 
 func main() {
@@ -24,6 +24,9 @@ func main() {
 
 	// Initialize the database
 	database.InitDB()
+
+	// Run database migration
+	database.MigrateDB()
 
 	switch command {
 	case "server":
