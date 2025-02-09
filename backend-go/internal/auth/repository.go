@@ -7,7 +7,10 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// RegisterUserService handles user registration with Argon2 hashing
+// RegisterUser inserts a new user into the database with hashed password.
+//
+// It takes user details (name, email, passwordHash, role) and stores them in the database.
+// Logs success or failure messages accordingly.
 func RegisterUser(name, email, passwordHash, role string) error {
 	query := `INSERT INTO users (name, email, password_hash, role) VALUES ($1, $2, $3, $4)`
 	_, err := database.DB.Exec(query, name, email, passwordHash, role)
@@ -20,7 +23,11 @@ func RegisterUser(name, email, passwordHash, role string) error {
 	return nil
 }
 
-// GetUserByEmail retrives a user from the database by email
+// GetUserByEmail retrieves a user from the database using their email.
+//
+// It queries the database for a user with the given email and returns the user object.
+// If no user is found, it returns `sql.ErrNoRows`.
+// Logs a message if the user is not found or if there is a database error.
 func GetUserByEmail(email string) (*User, error) {
 	var user User
 	query := `SELECT id, name, email, password_hash, role, created_at FROM users WHERE email = $1`

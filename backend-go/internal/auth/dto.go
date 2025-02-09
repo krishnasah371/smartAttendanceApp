@@ -12,3 +12,14 @@ type RegisterRequest struct {
 type RegisterResponse struct {
 	Message string `json:"message"`
 }
+
+// LoginRequest represents the expected JSON body for user login
+type LoginRequest struct {
+	Email    string `json:"email" binding:"required,email"`
+	Password string `json:"password" binding:"required"`
+}
+
+// LoginResponse represents the JSON response for successful login
+type LoginResponse struct {
+	Token string `json:"token"`
+}
