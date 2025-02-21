@@ -1,43 +1,43 @@
 import SwiftUI
 
-struct LoginFormView: View {
-    @ObservedObject var viewModel: LoginViewModel
-    
+struct SignUpForm: View {
+    @ObservedObject var viewModel: SignupViewModel
+
     var body: some View {
         NavigationStack {
             VStack(spacing: 20) {
-                Text("Welcome back!")
+                Text("Create an account")
                     .font(.title)
                     .fontWeight(.bold)
                     .padding(.top, 10)
 
-                Text("Enter your email and password to login.")
-                    .font(.subheadline)
-                    .foregroundColor(.gray)
-                    .padding(.top, -10)
+                Text(
+                    "Welcome! Register to get started."
+                )
+                .font(.subheadline)
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: 350)
+                .foregroundColor(.gray)
+                .padding(.top, -10)
 
                 // Email and Password Fields
                 AuthTextFieldView(
-                    icon: "person", placeholder: "Your username", text: $viewModel.username)
+                    icon: "person", placeholder: "Full Name",
+                    text: $viewModel.fullname)
                 AuthTextFieldView(
-                    icon: "lock", placeholder: "Your password", text: $viewModel.password,
+                    icon: "person", placeholder: "Your fisk email",
+                    text: $viewModel.email)
+                AuthTextFieldView(
+                    icon: "lock", placeholder: "A weak password recommended",
+                    text: $viewModel.password,
                     isSecure: true)
-
-                // Forgot Password Link
-                HStack {
-                    Spacer()
-                    NavigationLink(destination: ForgotPasswordView()) {
-                        Text("Forgot password?")
-                            .foregroundColor(.primaryAccentColor)
-                            .font(.subheadline)
-                            .padding(.bottom, 30)
-                    }
-                    .padding(.top, 10)
-                }
+                AuthTextFieldView(
+                    icon: "lock", placeholder: "Confirm your weak password",
+                    text: $viewModel.confirmPassword, isSecure: true)
 
                 // Login Button
                 NavigationLink(destination: DashboardView()) {
-                    Text("Login")
+                    Text("Signup")
                         .font(.headline)
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
@@ -53,12 +53,11 @@ struct LoginFormView: View {
             .clipShape(RoundedRectangle(cornerRadius: 25))
             .shadow(color: Color.black.opacity(0.4), radius: 10, x: 0, y: 5)
             .padding(.horizontal, 20)
-            .offset(y: -180)
+            .offset(y: -130)
         }
     }
 }
 
 #Preview {
-    LoginFormView(viewModel: LoginViewModel())
+    SignUpForm(viewModel: SignupViewModel())
 }
-

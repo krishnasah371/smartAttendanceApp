@@ -1,15 +1,15 @@
 import SwiftUI
 
-struct LoginView: View {
-    @StateObject private var viewModel = LoginViewModel()
+struct SignupView: View {
+    @StateObject private var viewModel = SignupViewModel()
 
     var body: some View {
         NavigationStack {
             VStack {
                 AuthHeaderView()
-                LoginFormView(viewModel: viewModel)
+                SignUpForm(viewModel: viewModel)
                 Spacer()
-                SignupSection()
+                LoginSection()
             }
             .frame(maxHeight: .infinity, alignment: .top)
         }
@@ -17,5 +17,5 @@ struct LoginView: View {
 }
 
 #Preview {
-    LoginView()
+    SignupView()
 }

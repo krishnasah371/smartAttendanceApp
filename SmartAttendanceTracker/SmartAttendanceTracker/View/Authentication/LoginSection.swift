@@ -1,18 +1,20 @@
 import SwiftUI
 
-struct SignupSection: View {
+struct LoginSection: View {
     var body: some View {
         NavigationStack {
             HStack {
-                Text("Don’t have an account?")
-                NavigationLink("Signup Now", destination: SignupView())
+                Text("Already have an account?")
+                NavigationLink("Login", destination: LoginView())
                     .fontWeight(.bold)
                     .foregroundColor(.primaryAccentColor)
             }
+            .padding(.bottom, 50)
         }
     }
 }
 
 #Preview {
-    SignupSection()
+    LoginSection()
 }
+
