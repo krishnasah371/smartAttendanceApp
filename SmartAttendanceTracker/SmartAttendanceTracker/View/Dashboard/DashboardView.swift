@@ -1,17 +1,23 @@
+// View/Dashboard/DashboardView.swift
 import SwiftUI
 
 struct DashboardView: View {
     var body: some View {
-        NavigationStack {
-            Text("Dashboard View")
-                .font(.title)
-                .fontWeight(.bold)
-                .padding(.top, 50)
-            Spacer()
+        VStack {
+            Text("Welcome to the Dashboard")
+                .font(.largeTitle)
+                .padding()
+
+            // Add your dashboard content here
+            Text("This is the main screen of the app.")
+                .font(.subheadline)
+                .foregroundColor(.gray)
         }
     }
 }
 
-#Preview {
-    DashboardView()
+struct DashboardView_Previews: PreviewProvider {
+    static var previews: some View {
+        DashboardView()
+    }
 }
