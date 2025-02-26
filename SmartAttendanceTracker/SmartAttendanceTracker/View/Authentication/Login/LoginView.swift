@@ -5,13 +5,15 @@ struct LoginView: View {
 
     var body: some View {
         NavigationStack {
+
             VStack {
                 AuthHeaderView()
-                LoginFormView(viewModel: viewModel)
+                LoginForm(viewModel: viewModel)
                 Spacer()
                 SignupSection()
             }
             .frame(maxHeight: .infinity, alignment: .top)
+            .background(Color.white) 
         }
     }
 }

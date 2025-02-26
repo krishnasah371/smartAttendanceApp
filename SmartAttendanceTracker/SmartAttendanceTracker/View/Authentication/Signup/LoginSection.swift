@@ -5,11 +5,12 @@ struct LoginSection: View {
         NavigationStack {
             HStack {
                 Text("Already have an account?")
+                    .foregroundColor(.primaryColorDark)
                 NavigationLink("Login", destination: LoginView())
                     .fontWeight(.bold)
-                    .foregroundColor(.primaryAccentColor)
+                    .foregroundColor(.primaryColor)
             }
-            .padding(.bottom, 50)
+            .padding(.bottom, 70)
         }
     }
 }

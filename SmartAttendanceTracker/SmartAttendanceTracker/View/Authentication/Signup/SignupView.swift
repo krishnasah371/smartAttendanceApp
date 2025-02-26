@@ -12,6 +12,7 @@ struct SignupView: View {
                 LoginSection()
             }
             .frame(maxHeight: .infinity, alignment: .top)
+            .background(Color.white)
         }
     }
 }

@@ -31,7 +31,7 @@ struct BLEDeviceRowView: View {
                 Button("Connect") {
                     connectAction()
                 }
-                .foregroundStyle(Color.primaryAccentColor)
+                .foregroundStyle(Color.primaryColor)
             }
         }
     }

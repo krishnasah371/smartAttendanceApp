@@ -5,10 +5,12 @@ struct SignupSection: View {
         NavigationStack {
             HStack {
                 Text("Don’t have an account?")
+                    .foregroundColor(.primaryColorDark)
                 NavigationLink("Signup Now", destination: SignupView())
                     .fontWeight(.bold)
-                    .foregroundColor(.primaryAccentColor)
+                    .foregroundColor(.primaryColor)
             }
+            .padding(.bottom, 20)
         }
     }
 }

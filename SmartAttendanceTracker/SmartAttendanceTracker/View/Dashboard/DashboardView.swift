@@ -3,15 +3,21 @@ import SwiftUI
 
 struct DashboardView: View {
     var body: some View {
-        VStack {
-            Text("Welcome to the Dashboard")
-                .font(.largeTitle)
-                .padding()
+        NavigationStack {
+            VStack {
+                Text("Dashboard")
+                    .font(.largeTitle)
+                    .padding()
 
-            // Add your dashboard content here
-            Text("This is the main screen of the app.")
-                .font(.subheadline)
-                .foregroundColor(.gray)
+                // Add your dashboard content here
+                Text("This is the main screen of the app.")
+                    .font(.subheadline)
+                    .foregroundColor(.gray)
+            }
+            Spacer()
+            NavigationLink(destination: SignupView()) {
+                Text("Settings")
+            }
         }
     }
 }

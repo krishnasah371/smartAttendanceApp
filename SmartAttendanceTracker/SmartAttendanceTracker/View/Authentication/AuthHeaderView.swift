@@ -23,7 +23,7 @@ struct AuthHeaderView: View {
             }
             .padding()
             .frame(maxWidth: .infinity)
-            .background(Color.primaryAccentColor)
+            .background(Color.primaryColor)
             .foregroundColor(.white)
             .cornerRadius(30)
             .ignoresSafeArea()

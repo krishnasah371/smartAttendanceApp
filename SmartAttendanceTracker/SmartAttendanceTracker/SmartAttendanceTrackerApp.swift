@@ -18,7 +18,7 @@ struct SmartAttendanceTrackerApp: App {
 
     var body: some Scene {
         WindowGroup {
-            BLEScanView() 
+            SplashScreenView() 
         }
         .modelContainer(sharedModelContainer)
     }
