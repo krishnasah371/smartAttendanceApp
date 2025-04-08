@@ -8,14 +8,13 @@ class SignupViewModel: ObservableObject {
     @Published var confirmPassword: String = ""
     @Published var isLoading: Bool = false
     @Published var errorMessage: String?
-
+    @Published var isAuthenticated: Bool = false
     @Published var nameError: String?
     @Published var emailError: String?
     @Published var passwordError: String?
     @Published var confirmPasswordError: String?
 
     @Published var isRegistrationSuccess: Bool = false
-    @Published var isAuthenticated: Bool = false
 
     var isFormValid: Bool {
         emailError == nil && passwordError == nil && confirmPasswordError == nil
@@ -90,7 +89,7 @@ class SignupViewModel: ObservableObject {
         do {
             var response = try await AuthService.shared.signup(
                 name: name, email: email, password: password)
-            print(name, email, password)
+
             print("✅ Signup successful: \(response)")  // ✅ Debug success response
             
             // TODO: Remove only for testing
@@ -98,33 +97,24 @@ class SignupViewModel: ObservableObject {
 
             if response.success == true {
                 isRegistrationSuccess = true
-                clearForm()
             } else {
                 errorMessage = mapErrorMessage(
                     response.error ?? response.message
                         ?? "Signup failed. Please try again.")
                 print("❌ Signup failed: \(errorMessage ?? "Unknown error")")  // ✅ Debug failure message
             }
-            
             var loginResponse = try await AuthService.shared.login(
-                email: email, password: password)
-            print("Login response: \(loginResponse)")
-            
-            // TODO: Temporary testing, remove:
-            loginResponse.success = !(loginResponse.token?.isEmpty ?? true)
-            
+                            email: email, password: password)
+                        print("Login response: \(loginResponse)")
+                        
+                        // TODO: Temporary testing, remove:
+                        loginResponse.success = !(loginResponse.token?.isEmpty ?? true)
+                        
             if loginResponse.success == true, let token = loginResponse.token {
                 AuthManager.shared.saveToken(token)
                 isAuthenticated = true
                 clearForm()
-            } else {
-                errorMessage = mapErrorMessage(
-                    response.error ?? loginResponse.message ?? "Invalid credentials."
-                )
-                print("Login failed: \(errorMessage ?? "Unknown error")")
             }
-            
-            
         } catch let networkError as NetworkError {
             errorMessage = networkError.localizedDescription
             print("❌ Network error: \(errorMessage ?? "Unknown network error")")  // ✅ Debug network error
@@ -136,30 +126,6 @@ class SignupViewModel: ObservableObject {
         }
 
         isLoading = false
-        // TODO: Log in here after verifying how we get user's name and all other info from server for each user.
-        
-        
-    }
-
-    private func clearForm() {
-        name = ""
-        email = ""
-        password = ""
-        confirmPassword = ""
-    }
-    private func mapErrorMessage(_ error: String) -> String {
-        switch error.lowercased() {
-        case "email already exists":
-            return "An account with this email already exists."
-        case "invalid email":
-            return "Please enter a valid email."
-        default:
-            return formatErrorMessage(error)
-        }
-    }
-
-    private func formatErrorMessage(_ error: String) -> String {
-        return error.prefix(1).capitalized + error.dropFirst()
     }
 
     private func clearForm() {

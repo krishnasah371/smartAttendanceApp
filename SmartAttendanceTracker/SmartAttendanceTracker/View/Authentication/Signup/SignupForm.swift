@@ -1,9 +1,9 @@
 import SwiftUI
 
 struct SignUpForm: View {
-    @EnvironmentObject var sessionManager: SessionManager
     @ObservedObject var viewModel: SignupViewModel
     @State private var navigateToDashboard = false
+    @EnvironmentObject var sessionManager: SessionManager
 
     var body: some View {
         NavigationStack {
@@ -28,11 +28,7 @@ struct SignUpForm: View {
                     icon: "person", placeholder: "Full Name",
                     text: $viewModel.name,
                     errorMessage: viewModel.nameError
-                    text: $viewModel.name,
-                    errorMessage: viewModel.nameError
                 )
-                .onChange(of: viewModel.name) { _, newValue in
-                    viewModel.validateName()
                 .onChange(of: viewModel.name) { _, newValue in
                     viewModel.validateName()
                 }
@@ -74,7 +70,7 @@ struct SignUpForm: View {
                 Button(action: {
                     Task {
                         await viewModel.signup()
-                        if viewModel.errorMessage == nil {  
+                        if viewModel.errorMessage == nil {
                             sessionManager.isLoggedIn = true
                         }
                     }
@@ -103,6 +99,10 @@ struct SignUpForm: View {
             .shadow(color: Color.black.opacity(0.4), radius: 10, x: 0, y: 5)
             .padding(.horizontal, 20)
             .offset(y: -130)
+
+            .navigationDestination(isPresented: $navigateToDashboard) {
+                LoginView()
+            }
         }
     }
 }
