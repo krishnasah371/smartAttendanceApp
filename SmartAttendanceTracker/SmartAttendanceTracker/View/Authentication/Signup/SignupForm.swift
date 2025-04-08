@@ -25,11 +25,11 @@ struct SignUpForm: View {
                 // Email and Password Fields
                 AuthTextFieldView(
                     icon: "person", placeholder: "Full Name",
-                    text: $viewModel.fullname,
-                    errorMessage: viewModel.fullNameError
+                    text: $viewModel.name,
+                    errorMessage: viewModel.nameError
                 )
-                .onChange(of: viewModel.fullname) { _, newValue in
-                    viewModel.validateFullname()
+                .onChange(of: viewModel.name) { _, newValue in
+                    viewModel.validateName()
                 }
 
                 AuthTextFieldView(
@@ -69,7 +69,7 @@ struct SignUpForm: View {
                 Button(action: {
                     Task {
                         await viewModel.signup()
-                        if viewModel.errorMessage == nil {  // Successful signup
+                        if viewModel.errorMessage == nil {  
                             navigateToDashboard = true
                         }
                     }
@@ -100,7 +100,7 @@ struct SignUpForm: View {
             .offset(y: -130)
 
             .navigationDestination(isPresented: $navigateToDashboard) {
-                DashboardView()
+                LoginView()
             }
         }
     }
