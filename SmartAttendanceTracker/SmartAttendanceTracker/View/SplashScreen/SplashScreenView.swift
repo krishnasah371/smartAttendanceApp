@@ -2,6 +2,8 @@ import SwiftUI
 
 struct SplashScreenView: View {
     @State private var navigateToLogin = false
+    @State private var navigateToDashboard = false
+    @EnvironmentObject var sessionManager: SessionManager
 
     var body: some View {
         NavigationStack {
@@ -30,14 +32,22 @@ struct SplashScreenView: View {
             }
             .onAppear {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                    navigateToLogin = true
+                    if AuthManager.shared.isLoggedIn {
+                        sessionManager.isLoggedIn = true
+                    } else {
+                        navigateToLogin = true
+                    }
                 }
             }
-            .navigationDestination(isPresented: $navigateToLogin) {
-                LoginView()
-                    .navigationBarBackButtonHidden()
-            }
-        }
+                            .navigationDestination(isPresented: $navigateToLogin) {
+                                LoginView()
+                                    .navigationBarBackButtonHidden()
+                            }
+                            .navigationDestination(isPresented: $navigateToDashboard) {
+                                MainTabView()
+                                    .navigationBarBackButtonHidden()
+                            }
+                        }
         .accentColor(.primaryColorDarker)
     }
 

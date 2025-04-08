@@ -3,6 +3,8 @@ import SwiftUI
 
 @main
 struct SmartAttendanceTrackerApp: App {
+    @StateObject private var sessionManager = SessionManager()
+
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([])
         let modelConfiguration = ModelConfiguration(
@@ -18,7 +20,8 @@ struct SmartAttendanceTrackerApp: App {
 
     var body: some Scene {
         WindowGroup {
-            SplashScreenView() 
+            RootView()
+                .environmentObject(sessionManager)
         }
         .modelContainer(sharedModelContainer)
     }
