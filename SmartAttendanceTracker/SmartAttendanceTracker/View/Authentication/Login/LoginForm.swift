@@ -21,12 +21,12 @@ struct LoginForm: View {
                 // Email and Password Fields
                 AuthTextFieldView(
                     icon: "person",
-                    placeholder: "Your username",
-                    text: $viewModel.username,
-                    errorMessage: viewModel.usernameError
+                    placeholder: "Your email",
+                    text: $viewModel.email,
+                    errorMessage: viewModel.emailError
                 )
-                .onChange(of: viewModel.username) { _, _ in
-                    viewModel.validateUsername()
+                .onChange(of: viewModel.email) { _, _ in
+                    viewModel.validateEmail()
                 }
 
                 AuthTextFieldView(

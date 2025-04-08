@@ -2,29 +2,29 @@ import SwiftUI
 
 @MainActor
 class LoginViewModel: ObservableObject {
-    @Published var username: String = ""
+    @Published var email: String = ""
     @Published var password: String = ""
     @Published var isLoading: Bool = false
     @Published var errorMessage: String?
 
-    @Published var usernameError: String? = nil
+    @Published var emailError: String? = nil
     @Published var passwordError: String? = nil
-    
+
     @Published var isAuthenticated: Bool = false
 
     var isFormValid: Bool {
-        usernameError == nil && passwordError == nil && !username.isEmpty
+        emailError == nil && passwordError == nil && !email.isEmpty
             && !password.isEmpty
     }
 
-    // Validate the username field
-    func validateUsername() {
-        if username.isEmpty {
-            usernameError = "Username is required."
-        } else if username.count < 5 {
-            usernameError = "Username must be at least 5 characters long."
+    // Validate the email field
+    func validateEmail() {
+        if email.isEmpty {
+            emailError = "email is required."
+        } else if email.count < 5 {
+            emailError = "email must be at least 5 characters long."
         } else {
-            usernameError = nil
+            emailError = nil
         }
     }
 
@@ -44,13 +44,13 @@ class LoginViewModel: ObservableObject {
 
     // Validate the entire form
     func validateForm() -> Bool {
-        validateUsername()
+        validateEmail()
         validatePassword()
 
         return isFormValid
     }
 
-    // Login function (example)
+    // Login function
     func login() async {
         guard validateForm() else {
             errorMessage = "Please fix the errors in the form."
@@ -61,18 +61,29 @@ class LoginViewModel: ObservableObject {
         errorMessage = nil
 
         do {
-            try await Task.sleep(nanoseconds: 2_000_000_000)
+            var response = try await AuthService.shared.login(
+                email: email, password: password)
+            print("Login response: \(response)")
 
-            if username == "Admin" && password == "Password1!" {
-                errorMessage = nil
-                username = ""
-                password = ""
+            // TODO: Temporary testing, remove:
+            response.success = !(response.token?.isEmpty ?? true)
+
+            if response.success == true, let token = response.token {
+                AuthManager.shared.saveToken(token)
                 isAuthenticated = true
             } else {
-                errorMessage = "Invalid username or password. Please try again."
+                errorMessage = mapErrorMessage(
+                    response.error ?? response.message ?? "Invalid credentials."
+                )
+                print("Login failed: \(errorMessage ?? "Unknown error")")
             }
+
+        } catch let networkError as NetworkError {
+            errorMessage = networkError.localizedDescription
+            print("Login error: \(errorMessage ?? "Unknown error")")
         } catch {
-            errorMessage = "An error occured. Please try again."
+            errorMessage =
+                "An unexpected error occurred. Please try again later."
         }
         isLoading = false
     }
@@ -82,5 +93,23 @@ class LoginViewModel: ObservableObject {
             #"^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$"#
         return NSPredicate(format: "SELF MATCHES %@", passwordRegex).evaluate(
             with: password)
+    }
+
+    private func mapErrorMessage(_ error: String) -> String {
+        switch error.lowercased() {
+        case "invalid credentials":
+            return "The email or password is incorrect."
+        case "user not found":
+            return "No account found with this email."
+        case "account locked":
+            return "Your account has been locked. Please contact support."
+        default:
+            return formatErrorMessage(error)
+        }
+    }
+
+    private func formatErrorMessage(_ error: String) -> String {
+        let formattedMessage = error.prefix(1).capitalized + error.dropFirst()
+        return formattedMessage.replacingOccurrences(of: "_", with: " ")
     }
 }

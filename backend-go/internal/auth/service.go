@@ -3,6 +3,7 @@ package auth
 import (
 	"database/sql"
 	"errors"
+	"strings"
 
 	"github.com/krishnasah371/smartAttendanceApp/backend/pkg/security"
 	"github.com/rs/zerolog/log"
@@ -37,12 +38,14 @@ func AuthenticateUserService(email, password string) (string, error) {
 //
 // It checks if the user already exists, ensures the role is valid, and securely hashes the password before saving.
 // If successful, the user is added to the database.
-func RegistgerUserService(name, email, password, role string) error {
-	// Validate role
-	validRoles := map[string]bool{"student": true, "teacher": true, "admin": true}
-	if _, exists := validRoles[role]; !exists {
-		log.Warn().Str("role", role).Msg("⚠️ Invalid user role")
-		return errors.New("invalid user role")
+func RegistgerUserService(name, email, password string) error {
+	role := ""
+	if strings.HasSuffix(email, "my.fisk.edu") {
+		role = "student"
+	} else if strings.HasSuffix(email, "fisk.edu") {
+		role = "teacher"
+	} else {
+		role = "student"
 	}
 	// Check if user already exists
 	existingUser, err := GetUserByEmail(email)
