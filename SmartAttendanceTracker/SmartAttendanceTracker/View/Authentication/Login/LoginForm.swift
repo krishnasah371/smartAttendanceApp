@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct LoginForm: View {
+    @EnvironmentObject var sessionManager: SessionManager
+
     @ObservedObject var viewModel: LoginViewModel
     @State private var navigateToDashboard = false
 
@@ -64,7 +66,7 @@ struct LoginForm: View {
                     Task {
                         await viewModel.login()
                         if viewModel.isAuthenticated {
-                            navigateToDashboard = true
+                            sessionManager.isLoggedIn = true
                         }
                     }
                 }) {
@@ -92,10 +94,6 @@ struct LoginForm: View {
             .shadow(color: Color.black.opacity(0.4), radius: 10, x: 0, y: 5)
             .padding(.horizontal, 20)
             .offset(y: -180)
-
-            .navigationDestination(isPresented: $navigateToDashboard) {
-                DashboardView()
-            }
         }
     }
 }
