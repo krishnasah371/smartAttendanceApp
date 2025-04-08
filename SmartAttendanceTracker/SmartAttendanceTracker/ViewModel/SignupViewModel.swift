@@ -98,6 +98,7 @@ class SignupViewModel: ObservableObject {
 
             if response.success == true {
                 isRegistrationSuccess = true
+                clearForm()
             } else {
                 errorMessage = mapErrorMessage(
                     response.error ?? response.message
@@ -138,6 +139,27 @@ class SignupViewModel: ObservableObject {
         // TODO: Log in here after verifying how we get user's name and all other info from server for each user.
         
         
+    }
+
+    private func clearForm() {
+        name = ""
+        email = ""
+        password = ""
+        confirmPassword = ""
+    }
+    private func mapErrorMessage(_ error: String) -> String {
+        switch error.lowercased() {
+        case "email already exists":
+            return "An account with this email already exists."
+        case "invalid email":
+            return "Please enter a valid email."
+        default:
+            return formatErrorMessage(error)
+        }
+    }
+
+    private func formatErrorMessage(_ error: String) -> String {
+        return error.prefix(1).capitalized + error.dropFirst()
     }
 
     private func clearForm() {

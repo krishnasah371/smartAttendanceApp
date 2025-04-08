@@ -28,3 +28,4 @@ struct AuthHeaderView: View {
 #Preview {
     AuthHeaderView()
 }
+

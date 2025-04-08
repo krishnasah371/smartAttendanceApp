@@ -28,7 +28,11 @@ struct SignUpForm: View {
                     icon: "person", placeholder: "Full Name",
                     text: $viewModel.name,
                     errorMessage: viewModel.nameError
+                    text: $viewModel.name,
+                    errorMessage: viewModel.nameError
                 )
+                .onChange(of: viewModel.name) { _, newValue in
+                    viewModel.validateName()
                 .onChange(of: viewModel.name) { _, newValue in
                     viewModel.validateName()
                 }
