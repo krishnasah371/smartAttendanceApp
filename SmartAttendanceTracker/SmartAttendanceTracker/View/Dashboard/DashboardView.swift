@@ -1,76 +1,119 @@
 import SwiftUI
 
-struct DashboardView: View {
-    @State private var showCheckInPopup = false
 
+struct ClassInfo: Identifiable, Hashable {
+    let id = UUID()
+    let name: String
+    let attendancePercentage: Int
+}
+
+struct DashboardView: View {
+    let user: UserModel
+    let classes: [ClassModel]
+    @State private var selectedClass: ClassModel?
+    
+    var totalAttendance: Int {
+        classes.map(\.attendancePercentage).reduce(0, +) / max(1, classes.count)
+    }
+    
     var body: some View {
         NavigationStack {
-            VStack {
-                Text("Dashboard")
-                    .font(.largeTitle)
-                    .fontWeight(.bold)
-                    .padding(.top, 120)
-                    .foregroundColor(.primaryColorDark)
-
-                Text("You have too much low energy to study.")
-                    .font(.subheadline)
-                    .foregroundColor(.primaryColorDarker)
-
-                Text("Go and sleep. Goodnight!")
-                    .font(.subheadline)
-                    .foregroundColor(.primaryColorDarker)
-
-                Spacer()
-
-                // "Connect to your class" button
-                NavigationLink(destination: BLEScanView()) {
-                    Text("Connect to your class")
+            ScrollView {
+                VStack(alignment: .leading, spacing: 20) {
+                     
+                    // Welcome
+                    VStack(spacing: 8) {
+                        Image(systemName: "person.crop.circle.fill")
+                            .resizable()
+                            .frame(width: 60, height: 60)
+                            .foregroundColor(.primaryColorDark)
+                        
+                        Text("Welcome, \(user.name) 👋")
+                            .font(.title)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.primaryColorDark)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.top)
+                        
+                    Text("📊 Total Attendance So Far: \(totalAttendance)%")
                         .font(.headline)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.primaryColorDark)
-                        .foregroundColor(.white)
-                        .cornerRadius(10)
-                        .padding(.horizontal)
-                }
+                        .foregroundColor(.primaryColorDarker)
+                    
+                    // Button
+                    Button {
+                        // Navigate
+                    } label: {
+                        Text(user.role == .teacher ? "Register a New Class" : "Enroll in a New Class")
+                            .font(.headline)
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(Color.primaryColorDark)
+                            .foregroundColor(.white)
+                            .cornerRadius(10)
+                    }
+                    
+                    TodayScheduleView(classes: classes)
+                    // Your Classes
+                    
+                    ForEach(classes) { classInfo in
+                        ClassesSummaryView(
+                                classInfo: classInfo,
+                                userRole: user.role,
+                                onTap: {
+                                    selectedClass = classInfo
+                                }
+                            )
+                    }
 
-                // "Check in" button
-                Button(action: {
-                    showCheckInPopup = true
-                }) {
-                    Text("Check in")
-                        .font(.headline)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.primaryColor)
-                        .foregroundColor(.white)
-                        .cornerRadius(10)
-                        .padding(.horizontal)
+                    // Schedule Today
+                    
+                    Spacer(minLength: 40)
                 }
-                .alert("✅ Attendance Recorded", isPresented: $showCheckInPopup)
-                {
-                    Button("OK", role: .cancel) {}
-                }
-
-                Spacer()
-
-                NavigationLink(destination: SignupView()) {
-                    Text("Settings")
-                        .foregroundColor(.blue)
-                        .padding()
+                .padding()
+                .navigationDestination(item: $selectedClass) { classModel in
+                    if user.role == .teacher {
+                        TeacherClassStatsView(classModel: classModel)
+                    } else {
+                        StudentClassStatsView(classModel: classModel)
+                    }
                 }
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(Color.white)  // ✅ Set white background
-            .edgesIgnoringSafeArea(.all)  // ✅ Ensure full screen background
-            .preferredColorScheme(.light)  // ✅ Force light mode
+            .background(Color.white)
+            
         }
+        
+    }
+        
+}
+
+
+
+struct ClassRegistrationView: View {
+    var body: some View {
+        Text("Class Registration View (Teacher)")
     }
 }
 
-// Preview
-struct DashboardView_Previews: PreviewProvider {
-    static var previews: some View {
-        DashboardView()
+struct ClassView: View {
+    var body: some View {
+        Text("Enroll in Class View (Student)")
     }
 }
+
+struct TeacherClassStatsView: View {
+    let classModel: ClassModel
+
+    var body: some View {
+        Text("Teacher View for \(classModel.name)")
+    }
+}
+
+struct StudentClassStatsView: View {
+    let classModel: ClassModel
+
+    var body: some View {
+        Text("Student View for \(classModel.name)")
+    }
+}
+

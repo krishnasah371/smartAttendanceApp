@@ -3,6 +3,7 @@ import SwiftUI
 struct SignUpForm: View {
     @ObservedObject var viewModel: SignupViewModel
     @State private var navigateToDashboard = false
+    @EnvironmentObject var sessionManager: SessionManager
 
     var body: some View {
         NavigationStack {
@@ -69,8 +70,8 @@ struct SignUpForm: View {
                 Button(action: {
                     Task {
                         await viewModel.signup()
-                        if viewModel.errorMessage == nil {  
-                            navigateToDashboard = true
+                        if viewModel.errorMessage == nil {
+                            sessionManager.isLoggedIn = true
                         }
                     }
                 }) {
@@ -106,6 +107,6 @@ struct SignUpForm: View {
     }
 }
 
-#Preview {
-    SignUpForm(viewModel: SignupViewModel())
-}
+//#Preview {
+//    SignUpForm(viewModel: SignupViewModel())
+//}

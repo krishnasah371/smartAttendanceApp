@@ -2,13 +2,14 @@ import SwiftUI
 
 @MainActor
 class SignupViewModel: ObservableObject {
+    let role: UserRole
     @Published var name: String = ""
     @Published var email: String = ""
     @Published var password: String = ""
     @Published var confirmPassword: String = ""
     @Published var isLoading: Bool = false
     @Published var errorMessage: String?
-
+    @Published var isAuthenticated: Bool = false
     @Published var nameError: String?
     @Published var emailError: String?
     @Published var passwordError: String?
@@ -16,11 +17,16 @@ class SignupViewModel: ObservableObject {
 
     @Published var isRegistrationSuccess: Bool = false
 
+    init(role: UserRole) {
+            self.role = role
+        }
+    
     var isFormValid: Bool {
         emailError == nil && passwordError == nil && confirmPasswordError == nil
             && !name.isEmpty && !email.isEmpty && !password.isEmpty
             && !confirmPassword.isEmpty
     }
+    
 
     // Validate name field
     func validateName() {
@@ -88,7 +94,7 @@ class SignupViewModel: ObservableObject {
 
         do {
             var response = try await AuthService.shared.signup(
-                name: name, email: email, password: password)
+                name: name, email: email, password: password, role:role)
 
             print("✅ Signup successful: \(response)")  // ✅ Debug success response
             
@@ -97,14 +103,24 @@ class SignupViewModel: ObservableObject {
 
             if response.success == true {
                 isRegistrationSuccess = true
-                clearForm()
             } else {
                 errorMessage = mapErrorMessage(
                     response.error ?? response.message
                         ?? "Signup failed. Please try again.")
                 print("❌ Signup failed: \(errorMessage ?? "Unknown error")")  // ✅ Debug failure message
             }
-
+            var loginResponse = try await AuthService.shared.login(
+                            email: email, password: password)
+                        print("Login response: \(loginResponse)")
+                        
+                        // TODO: Temporary testing, remove:
+                        loginResponse.success = !(loginResponse.token?.isEmpty ?? true)
+                        
+            if loginResponse.success == true, let token = loginResponse.token {
+                AuthManager.shared.saveToken(token)
+                isAuthenticated = true
+                clearForm()
+            }
         } catch let networkError as NetworkError {
             errorMessage = networkError.localizedDescription
             print("❌ Network error: \(errorMessage ?? "Unknown network error")")  // ✅ Debug network error

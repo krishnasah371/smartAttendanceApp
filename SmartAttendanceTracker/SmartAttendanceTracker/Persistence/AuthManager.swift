@@ -17,4 +17,8 @@ class AuthManager {
     func removeToken() {
         UserDefaults.standard.removeObject(forKey: tokenKey)
     }
+    
+    var isLoggedIn: Bool {
+            getToken() != nil
+    }
 }
