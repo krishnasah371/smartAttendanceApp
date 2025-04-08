@@ -6,7 +6,7 @@ struct SignupSection: View {
             HStack {
                 Text("Don’t have an account?")
                     .foregroundColor(.primaryColorDark)
-                NavigationLink("Signup Now", destination: SignupView())
+                NavigationLink("Signup Now", destination: WelcomeView())
                     .fontWeight(.bold)
                     .foregroundColor(.primaryColor)
             }

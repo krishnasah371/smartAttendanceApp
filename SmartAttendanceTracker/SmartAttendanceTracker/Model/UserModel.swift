@@ -7,14 +7,15 @@
 
 import Foundation
 
-enum UserRoles: String, Codable {
+enum UserRole: String, Codable, Identifiable {
     case teacher
     case student
-    case admin
+    var id: String { self.rawValue }
 }
 
 struct UserModel: Codable {
     let email: String
     let name: String
-    let role: UserRoles
+    let role: UserRole
 }
+

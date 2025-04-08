@@ -40,7 +40,7 @@ struct SplashScreenView: View {
                 }
             }
                             .navigationDestination(isPresented: $navigateToLogin) {
-                                LoginView()
+                                WelcomeView()
                                     .navigationBarBackButtonHidden()
                             }
                             .navigationDestination(isPresented: $navigateToDashboard) {

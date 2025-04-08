@@ -1,7 +1,13 @@
 import SwiftUI
 
 struct SignupView: View {
-    @StateObject private var viewModel = SignupViewModel()
+    let role: UserRole
+    @StateObject private var viewModel: SignupViewModel
+
+    init(role: UserRole) {
+        self.role = role
+        _viewModel = StateObject(wrappedValue: SignupViewModel(role: role))
+    }
 
     var body: some View {
         NavigationStack {
@@ -17,6 +23,7 @@ struct SignupView: View {
     }
 }
 
-#Preview {
-    SignupView()
-}
+
+//#Preview {
+//    SignupView()
+//}

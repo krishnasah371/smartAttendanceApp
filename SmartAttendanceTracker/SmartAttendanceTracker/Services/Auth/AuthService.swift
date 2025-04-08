@@ -19,8 +19,8 @@ class AuthService {
         }
     }
     
-    func signup(name: String, email: String, password: String) async throws -> SignupResponse {
-        let signupData = SignupRequest(name: name, email: email, password: password)
+    func signup(name: String, email: String, password: String, role: UserRole) async throws -> SignupResponse {
+        let signupData = SignupRequest(name: name, email: email, password: password, role: role.rawValue)
         let bodyData = try JSONEncoder().encode(signupData)
         
         do {

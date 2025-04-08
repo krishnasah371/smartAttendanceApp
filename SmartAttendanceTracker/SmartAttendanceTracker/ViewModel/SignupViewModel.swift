@@ -2,6 +2,7 @@ import SwiftUI
 
 @MainActor
 class SignupViewModel: ObservableObject {
+    let role: UserRole
     @Published var name: String = ""
     @Published var email: String = ""
     @Published var password: String = ""
@@ -16,11 +17,16 @@ class SignupViewModel: ObservableObject {
 
     @Published var isRegistrationSuccess: Bool = false
 
+    init(role: UserRole) {
+            self.role = role
+        }
+    
     var isFormValid: Bool {
         emailError == nil && passwordError == nil && confirmPasswordError == nil
             && !name.isEmpty && !email.isEmpty && !password.isEmpty
             && !confirmPassword.isEmpty
     }
+    
 
     // Validate name field
     func validateName() {
@@ -88,7 +94,7 @@ class SignupViewModel: ObservableObject {
 
         do {
             var response = try await AuthService.shared.signup(
-                name: name, email: email, password: password)
+                name: name, email: email, password: password, role:role)
 
             print("✅ Signup successful: \(response)")  // ✅ Debug success response
             
