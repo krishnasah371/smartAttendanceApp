@@ -2,47 +2,44 @@ import SwiftUI
 
 struct BLEDeviceRowView: View {
     let device: BLEDevice
-    let isConnecting: Bool
-    let isConnected: Bool
-    var connectAction: () -> Void
-    var disconnectAction: () -> Void
-    
+    let isSelected: Bool
+    let selectAction: () -> Void
+
     var body: some View {
         HStack {
-            VStack(alignment: .leading) {
+            VStack(alignment: .leading, spacing: 4) {
                 Text(device.name)
                     .font(.headline)
                 Text("RSSI: \(device.rssi) dBm")
-                    .font(.subheadline)
+                    .font(.caption)
                     .foregroundColor(.gray)
             }
             Spacer()
-            
-            if isConnecting {
-                Button("Connecting") {}
-                    .disabled(true)
-                    .foregroundColor(.gray)
-            } else if isConnected {
-                Button("Disconnect") {
-                    disconnectAction()
-                }
-                .foregroundColor(.red)
-            } else {
-                Button("Connect") {
-                    connectAction()
-                }
-                .foregroundStyle(Color.primaryColor)
+
+            Button(action: {
+                selectAction()
+            }) {
+                Text(isSelected ? "Selected" : "Select")
+                    .font(.subheadline)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(isSelected ? Color.green.opacity(0.2) : Color.primaryColor.opacity(0.1))
+                    .foregroundColor(isSelected ? .green : .primaryColorDark)
+                    .cornerRadius(8)
             }
         }
+        .padding(10)
+        .background(isSelected ? Color.green.opacity(0.05) : Color.gray.opacity(0.05))
+        .cornerRadius(10)
     }
 }
 
-#Preview {
-    BLEDeviceRowView(
-        device: BLEDevice(id: UUID(), name: "Mock Device", peripheral: nil, rssi: -50),
-        isConnecting: false,
-        isConnected: false,
-        connectAction: {},
-        disconnectAction: {})
-}
+//#Preview {
+//    BLEDeviceRowView(
+//        device: BLEDevice(id: UUID(), name: "Mock Device", peripheral: nil, rssi: -50),
+//        isConnecting: false,
+//        isConnected: false,
+//        connectAction: {},
+//        disconnectAction: {})
+//}
 

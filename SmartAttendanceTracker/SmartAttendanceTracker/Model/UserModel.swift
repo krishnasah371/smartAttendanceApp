@@ -13,7 +13,8 @@ enum UserRole: String, Codable, Identifiable {
     var id: String { self.rawValue }
 }
 
-struct UserModel: Codable {
+struct UserModel: Codable, Identifiable {
+    var id: String
     let email: String
     let name: String
     let role: UserRole
