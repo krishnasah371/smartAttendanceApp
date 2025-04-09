@@ -71,3 +71,23 @@ func getNextClassTime(for schedule: ClassSchedule, timeZone: TimeZone) -> String
 
     return nil
 }
+
+func getScheduleSummary(from classSchedule: ClassSchedule) -> String {
+    let dayOrder = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+    let dayShortNames: [String: String] = [
+        "Monday": "Mon", "Tuesday": "Tue", "Wednesday": "Wed",
+        "Thursday": "Thu", "Friday": "Fri", "Saturday": "Sat", "Sunday": "Sun"
+    ]
+
+    var summaryLines: [String] = []
+
+    for day in dayOrder {
+        guard let timeSlots = classSchedule.days[day], !timeSlots.isEmpty else { continue }
+        
+        let shortDay = dayShortNames[day] ?? day
+        let line = "\(shortDay): \(timeSlots.joined(separator: ", "))"
+        summaryLines.append(line)
+    }
+
+    return summaryLines.joined(separator: "\n")
+}
