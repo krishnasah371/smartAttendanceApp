@@ -5,8 +5,10 @@ import Combine
 class BLEManager: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     @Published var isBluetoothEnabled: Bool = false
     @Published var discoveredDevices: [BLEDevice] = []
+    @Published var discoveredDevicesCount = 0
     @Published var connectedPeripheral: CBPeripheral?
     @Published var connectingDeviceID: UUID?
+    @Published var isScanning = false
 
     private var centralManager: CBCentralManager!
 
@@ -46,7 +48,16 @@ class BLEManager: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeriph
         }
         print("🔎 Scanning for BLE devices...")
         discoveredDevices.removeAll()
+        discoveredDevicesCount = discoveredDevices.count
         centralManager.scanForPeripherals(withServices: nil, options: nil)
+        isScanning = true
+        // Optional: Stop scan after 5-10 seconds
+            DispatchQueue.main.asyncAfter(deadline: .now() + 30) {
+                self.centralManager.stopScan()
+                self.isScanning = false
+                print("⛔️ Scan stopped")
+                print(self.discoveredDevices.sorted { $0.id > $1.id })
+            }
     }
 
     func centralManager(
@@ -67,6 +78,8 @@ class BLEManager: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeriph
                     peripheral: peripheral, rssi: RSSI.intValue
                 )
                 self.discoveredDevices.append(newDevice)
+                self.discoveredDevicesCount = self.discoveredDevices.count
+                print("count is ", self.discoveredDevices.count)
                 print("📡 Found Device: \(displayName) - RSSI: \(RSSI)")
             }
         }

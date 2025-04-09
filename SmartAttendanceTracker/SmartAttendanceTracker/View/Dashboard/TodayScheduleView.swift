@@ -13,6 +13,7 @@ struct TodayScheduleItem: Hashable {
 }
 struct TodayScheduleView: View {
     let classes: [ClassModel]
+    
     var body: some View {
         VStack(alignment: .center, spacing: 16) {
             // Heading: "Your Tuesday Schedule"

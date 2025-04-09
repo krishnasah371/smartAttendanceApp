@@ -11,6 +11,7 @@ struct DashboardView: View {
     let user: UserModel
     let classes: [ClassModel]
     @State private var selectedClass: ClassModel?
+    @State private var showRegisterOrJoinClassPage = false
     
     var totalAttendance: Int {
         classes.map(\.attendancePercentage).reduce(0, +) / max(1, classes.count)
@@ -42,7 +43,7 @@ struct DashboardView: View {
                     
                     // Button
                     Button {
-                        // Navigate
+                        showRegisterOrJoinClassPage = true
                     } label: {
                         Text(user.role == .teacher ? "Register a New Class" : "Enroll in a New Class")
                             .font(.headline)
@@ -76,6 +77,20 @@ struct DashboardView: View {
                         TeacherClassStatsView(classModel: classModel)
                     } else {
                         StudentClassStatsView(classModel: classModel)
+                    }
+                }
+                .navigationDestination(isPresented: $showRegisterOrJoinClassPage) {
+                    if user.role == .teacher {
+                        RegisterNewClassView( onRegister: {
+                            // TODO: Handle Register
+                            showRegisterOrJoinClassPage = false
+                        })
+                        
+                    } else {
+                        EnrollInAClassView(availableClasses: classes, enrolledClassIDs:Set(classes.map(\.id)), onEnroll:  { selectedClass in
+                            // TODO: handle enrollment
+                            showRegisterOrJoinClassPage = false
+                        })
                     }
                 }
             }
