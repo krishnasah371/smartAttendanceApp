@@ -62,3 +62,19 @@ func RegisterHandler(c *gin.Context) {
 
 	c.JSON(http.StatusOK, RegisterResponse{Message: "User registered successfully"})
 }
+
+// GetCurrentUserHandler returns the currently authenticated user's information.
+//
+// It uses the user ID extracted from the JWT in middleware to fetch the user from the database.
+// Responds with the user object or an error message.
+func GetCurrentUserHandler(c *gin.Context) {
+	userID := c.GetInt("user_id")
+
+	user, err := GetUserByID(userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "User not found or DB error"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"user": user})
+}

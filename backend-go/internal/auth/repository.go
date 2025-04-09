@@ -43,3 +43,24 @@ func GetUserByEmail(email string) (*User, error) {
 
 	return &user, nil
 }
+
+// GetUserByID fetches a user from the database using their user ID.
+//
+// It returns a User object or an error if the user is not found or a DB error occurs.
+func GetUserByID(userID int) (*User, error) {
+	var user User
+	query := `SELECT id, name, email, role, created_at FROM users WHERE id = $1`
+	err := database.DB.QueryRow(query, userID).
+		Scan(&user.ID, &user.Name, &user.Email, &user.Role, &user.CreatedAt)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			log.Warn().Int("user_id", userID).Msg("⚠️ User not found")
+			return nil, err
+		}
+		log.Error().Err(err).Int("user_id", userID).Msg("❌ Failed to fetch user by ID")
+		return nil, err
+	}
+
+	return &user, nil
+}

@@ -2,6 +2,7 @@ package auth
 
 import (
 	"github.com/gin-gonic/gin"
+	middleware "github.com/krishnasah371/smartAttendanceApp/backend/pkg/middlewares"
 	"github.com/rs/zerolog/log"
 )
 
@@ -13,8 +14,13 @@ import (
 func RegisterRoutes(router *gin.RouterGroup) {
 	authGroup := router.Group("/auth")
 	{
+		// Public Routes
 		authGroup.POST("/register", RegisterHandler)
 		authGroup.POST("/login", LoginHandler)
+
+		// Protected Routes
+		authGroup.Use(middleware.AuthMiddleware())
+		authGroup.GET("/me", GetCurrentUserHandler)
 	}
 
 	log.Info().Msg("✅ Auth module initialized!")
