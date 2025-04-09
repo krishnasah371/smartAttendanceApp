@@ -16,6 +16,13 @@ func MigrateDB() {
 
 	// Run all the database migrations
 	MigrateAuth()
+	MigrateClasses()
+	MigrateClassEnrollments()
+	MigrateAttendance()
+	MigrateNotifications()
+	MigrateAdminLogs()
+
+	// TODO: Not functional yet
 	// MigrateGeofencing()
 
 	log.Info().Msg("✅ Database migrations completed successfully.")
