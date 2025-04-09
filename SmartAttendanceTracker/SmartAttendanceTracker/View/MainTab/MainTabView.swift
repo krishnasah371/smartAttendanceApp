@@ -14,6 +14,7 @@ struct MainTabView: View {
 
     
     let user: UserModel = UserModel(
+        id:"bipul@example.com",
         email: "bipul@example.com",
         name: "Bipul",
         role: .teacher

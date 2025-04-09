@@ -11,10 +11,39 @@ struct BLE_TeacherView: View {
     let user: UserModel
     let inSessionClasses: [ClassModel]
     let otherClasses: [ClassModel]
+    @State private var isAttendanceViewActive = false
+
+
+       
+    
     @State private var showRegisterPage = false
     var body: some View {
+        
         NavigationStack {
             
+            let students = [
+                UserModel(id: "alice@school.com", email: "alice@school.com", name: "Alice Johnson", role: .student),
+                UserModel(id: "bob@school.com", email: "bob@school.com", name: "Bob Smith", role: .student),
+                UserModel(id: "charlie@school.com", email: "charlie@school.com", name: "Charlie Singh", role: .student),
+                UserModel(id: "dave@school.com", email: "dave@school.com", name: "Dave Lee", role: .student),
+                UserModel(id: "eve@school.com", email: "eve@school.com", name: "Eve Carter", role: .student),
+                UserModel(id: "fatima@school.com", email: "fatima@school.com", name: "Fatima Khan", role: .student)
+            ]
+
+
+               let presentEmails = [
+                   "alice@school.com",
+                   "charlie@school.com",
+                   "fatima@school.com"
+               ]
+
+               let viewModel = AttendanceViewModel(
+                   classId: UUID(), // Class ID is still a UUID (unchanged)
+                   date: Date(),
+                   allStudents: students,
+                   initialPresentIds: presentEmails
+               )
+
             
             ScrollView {
                 VStack {
@@ -74,7 +103,8 @@ struct BLE_TeacherView: View {
                                         // Start Attendance
                                     },
                                     onSecondaryTap: {
-                                        // View Attendance
+                                        isAttendanceViewActive = true
+                                        print(isAttendanceViewActive)
                                     }
                                 )
                                 .padding()
@@ -99,7 +129,8 @@ struct BLE_TeacherView: View {
                                     // Start Attendance
                                 },
                                 onSecondaryTap: {
-                                    // View Attendance
+                                    isAttendanceViewActive = true
+
                                 }
                             )
                             .padding(.horizontal)
@@ -119,6 +150,12 @@ struct BLE_TeacherView: View {
                         showRegisterPage = false
                     }
                 
+            }
+            .navigationDestination(isPresented: $isAttendanceViewActive) {
+                AttendanceViewForDate(viewModel: viewModel) {
+                    // TODO: Save Data
+                    isAttendanceViewActive = false
+                }
             }
         }
         

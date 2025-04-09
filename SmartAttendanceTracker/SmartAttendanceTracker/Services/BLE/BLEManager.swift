@@ -7,7 +7,7 @@ class BLEManager: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeriph
     @Published var discoveredDevices: [BLEDevice] = []
     @Published var discoveredDevicesCount = 0
     @Published var connectedPeripheral: CBPeripheral?
-    @Published var connectingDeviceID: UUID?
+    @Published var connectingDeviceID: String?
     @Published var isScanning = false
 
     private var centralManager: CBCentralManager!
@@ -72,9 +72,9 @@ class BLEManager: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeriph
 
             let displayName = self.knownDevices[deviceName] ?? deviceName
 
-            if !self.discoveredDevices.contains(where: { $0.id == peripheral.identifier }) {
+            if !self.discoveredDevices.contains(where: { $0.id == "\(peripheral.identifier)"}) {
                 let newDevice = BLEDevice(
-                    id: peripheral.identifier, name: displayName,
+                    id: "\(peripheral.identifier)", name: displayName,
                     peripheral: peripheral, rssi: RSSI.intValue
                 )
                 self.discoveredDevices.append(newDevice)
@@ -92,7 +92,7 @@ class BLEManager: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeriph
             return
         }
         print("🧷 Connecting to \(device.name)...")
-        self.connectingDeviceID = device.id
+        self.connectingDeviceID = "\(device.id)"
         self.connectedPeripheral = nil
         centralManager.connect(peripheral, options: nil)
     }

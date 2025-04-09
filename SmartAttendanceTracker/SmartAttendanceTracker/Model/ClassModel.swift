@@ -6,6 +6,14 @@
 //
 import Foundation
 
+
+struct AttendanceRecord {
+    let classId: UUID
+    let date: Date
+    var presentStudentIds: Set<UUID>
+}
+
+
 struct ClassModel: Identifiable, Hashable {
     let id: UUID
     let name: String
@@ -13,6 +21,9 @@ struct ClassModel: Identifiable, Hashable {
     let teacherName: String
     let schedule: Schedule
     var attendancePercentage: Int
+    // New fields
+    var isBeaconAttached: Bool = false
+    var beaconId: String? = nil
 }
 
 struct Schedule: Codable, Hashable {

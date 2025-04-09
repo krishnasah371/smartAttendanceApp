@@ -2,7 +2,8 @@ import SwiftUI
 
 struct BLEScanView: View {
     @ObservedObject var bleManager: BLEManager
-
+    var onBeaconSelected: (BLEDevice) -> Void
+    @State private var selectedDeviceID: String? = nil
 //    init() {
 //        #if debug
 //            if processinfo.processinfo.environment["xcode_running_for_previews"]
@@ -53,20 +54,16 @@ struct BLEScanView: View {
                 // ✅ list of discovered devices
                 if bleManager.discoveredDevicesCount > 0 {
                     VStack(alignment: .leading, spacing: 12) {
-                        ForEach(0..<bleManager.discoveredDevicesCount, id: \.self) { index in
-                            if index < bleManager.discoveredDevices.count {
-                                BLEDeviceRowView(
-                                    device: bleManager.discoveredDevices[index],
-                                    isConnecting: bleManager.connectingDeviceID == bleManager.discoveredDevices[index].id,
-                                    isConnected: bleManager.connectedPeripheral?.identifier == bleManager.discoveredDevices[index].id,
-                                    connectAction: {
-                                        bleManager.connectToDevice(bleManager.discoveredDevices[index])
-                                    },
-                                    disconnectAction: {
-                                        bleManager.disconnectDevice()
-                                    }
-                                )
-                            }
+                        ForEach(Array(0..<bleManager.discoveredDevicesCount), id: \.self) { index in
+                            let device = bleManager.discoveredDevices[index]
+                            BLEDeviceRowView(
+                                device: device,
+                                isSelected: selectedDeviceID == device.id,
+                                selectAction: {
+                                    selectedDeviceID = device.id
+                                    onBeaconSelected(device)
+                                }
+                            )
                         }
                     }
                 } else {
@@ -77,7 +74,6 @@ struct BLEScanView: View {
             }
             .padding()
         }
-    
 }
 
 //#Preview {
