@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct BLEScanView: View {
-    @StateObject private var bleManager = BLEManager()
+    @ObservedObject var bleManager: BLEManager
 
 //    init() {
 //        #if debug
@@ -18,8 +18,9 @@ struct BLEScanView: View {
 //    }
 
     var body: some View {
-        NavigationStack {
+
             VStack {
+                
                 BLEStatusView(isBluetoothEnabled: bleManager.isBluetoothEnabled)
 
                 // ✅ scan button
@@ -36,28 +37,50 @@ struct BLEScanView: View {
                 }
                 .padding(.bottom)
 //                .disabled(!bleManager.isBluetoothEnabled)
-
+                if bleManager.isScanning {
+                    HStack(spacing: 10) {
+                        ProgressView()
+                        Text("Scanning for devices...")
+                            .font(.subheadline)
+                            .foregroundColor(.gray)
+                    }
+                    .padding(.bottom)
+                } else {
+                    Text("Not scanning currently...")
+                        .font(.subheadline)
+                        .foregroundColor(.gray)
+                }
                 // ✅ list of discovered devices
-                List(bleManager.discoveredDevices, id: \.id) { device in
-                    BLEDeviceRowView(
-                        device: device,
-                        isConnecting: bleManager.connectingDeviceID
-                            == device.id,
-                        isConnected: bleManager.connectedPeripheral?.identifier
-                            == device.id,
-                        connectAction: { bleManager.connectToDevice(device) },
-                        disconnectAction: { bleManager.disconnectDevice() }
-
-                    )
+                if bleManager.discoveredDevicesCount > 0 {
+                    VStack(alignment: .leading, spacing: 12) {
+                        ForEach(0..<bleManager.discoveredDevicesCount, id: \.self) { index in
+                            if index < bleManager.discoveredDevices.count {
+                                BLEDeviceRowView(
+                                    device: bleManager.discoveredDevices[index],
+                                    isConnecting: bleManager.connectingDeviceID == bleManager.discoveredDevices[index].id,
+                                    isConnected: bleManager.connectedPeripheral?.identifier == bleManager.discoveredDevices[index].id,
+                                    connectAction: {
+                                        bleManager.connectToDevice(bleManager.discoveredDevices[index])
+                                    },
+                                    disconnectAction: {
+                                        bleManager.disconnectDevice()
+                                    }
+                                )
+                            }
+                        }
+                    }
+                } else {
+                    Text("No devices found yet.")
+                        .foregroundColor(.gray)
+                        .padding(.top)
                 }
             }
             .padding()
-            .navigationTitle("Connect to your class.")
         }
-    }
+    
 }
 
-#Preview {
-    BLEScanView()
-        .environmentObject(BLEManager.mock)
-}
+//#Preview {
+//    BLEScanView()
+//        .environmentObject(BLEManager.mock)
+//}

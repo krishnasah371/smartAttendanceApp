@@ -45,7 +45,7 @@ struct MainTabView: View {
             timeZone: TimeZone.current,
             classSchedule: ClassSchedule(days: [
                 "Monday": ["08:30-09:30", "14:00-15:00"],
-                "Tuesday": ["10:00-11:00"],
+                "Tuesday": ["10:00-11:00", "20:00-21:00"],
                 "Friday": ["13:00-14:00"]
             ])
         ),  attendancePercentage: 78)
@@ -59,7 +59,7 @@ struct MainTabView: View {
                 }
                 .tag(0)
 
-            BLEScanView()
+            BLEMainView(user: user, enrolledClasses: sampleClasses)
                 .tabItem {
                     Label("Attendance", systemImage: "calendar")
                 }
