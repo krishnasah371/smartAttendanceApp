@@ -5,6 +5,17 @@ class ClassService {
 
     private init() {}
 
+    func fetchUserDetails() async throws -> UserModel? {
+        do {
+            let response:UserModel = try await APIClient.shared.request(.getUser)
+            return response
+        } catch let networkError as NetworkError {
+            throw networkError
+        } catch {
+            throw NetworkError.serverError("An error occurred while fetching classes.")
+        }
+    }
+    
     func fetchEnrolledClasses() async throws -> [ClassModel]? {
         do {
             let response:ClassesResponse = try await APIClient.shared.request(.getClasses)
@@ -28,6 +39,7 @@ class ClassService {
             throw NetworkError.serverError("An error occurred while fetching classes.")
         }
     }
+    
     func enrollInAClass(classId: Int) async throws -> ClassEnrollResponse? {
         do {
             let response:ClassEnrollResponse = try await APIClient.shared.request(.enrollInAClass(classId:classId))
@@ -39,6 +51,7 @@ class ClassService {
             throw NetworkError.serverError("An error occurred while fetching classes.")
         }
     }
+    
     func registerANewClass(classRegistrationPayload: ClassRegistrationPayload) async throws -> ClassRegistrationResponse? {
         do {
             let bodyData = try JSONEncoder().encode(classRegistrationPayload)

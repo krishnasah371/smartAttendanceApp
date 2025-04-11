@@ -12,40 +12,13 @@ struct BLE_TeacherView: View {
     let inSessionClasses: [ClassModel]
     let otherClasses: [ClassModel]
     var updateClassStatus: () -> Void
-
     @State private var isAttendanceViewActive = false
-
-
-       
+    @State var selectedClassId: Int?
     
     @State private var showRegisterPage = false
     var body: some View {
-        
+        //   TODO:     ADD ATTENDENCE VIEW MODEL HERE:
         NavigationStack {
-            
-            let students = [
-                UserModel(id: "alice@school.com", email: "alice@school.com", name: "Alice Johnson", role: .student),
-                UserModel(id: "bob@school.com", email: "bob@school.com", name: "Bob Smith", role: .student),
-                UserModel(id: "charlie@school.com", email: "charlie@school.com", name: "Charlie Singh", role: .student),
-                UserModel(id: "dave@school.com", email: "dave@school.com", name: "Dave Lee", role: .student),
-                UserModel(id: "eve@school.com", email: "eve@school.com", name: "Eve Carter", role: .student),
-                UserModel(id: "fatima@school.com", email: "fatima@school.com", name: "Fatima Khan", role: .student)
-            ]
-
-
-               let presentEmails = [
-                   "alice@school.com",
-                   "charlie@school.com",
-                   "fatima@school.com"
-               ]
-
-               let viewModel = AttendanceViewModel(
-                   classId: 1, // Class ID is still a UUID (unchanged)
-                   date: Date(),
-                   allStudents: students,
-                   initialPresentIds: presentEmails
-               )
-
             
             ScrollView {
                 VStack {
@@ -103,9 +76,11 @@ struct BLE_TeacherView: View {
                                     userRole: .teacher,
                                     onPrimaryTap: {
                                         // Start Attendance
+                                        
                                     },
                                     onSecondaryTap: {
                                         isAttendanceViewActive = true
+                                        selectedClassId = classModel.id
                                         print(isAttendanceViewActive)
                                     }
                                 )
@@ -128,11 +103,11 @@ struct BLE_TeacherView: View {
                                 isOngoing: false,
                                 userRole: .teacher,
                                 onPrimaryTap: {
-                                    // Start Attendance
                                 },
                                 onSecondaryTap: {
+                                    selectedClassId = classModel.id
                                     isAttendanceViewActive = true
-
+                                    
                                 }
                             )
                             .padding(.horizontal)
@@ -148,19 +123,15 @@ struct BLE_TeacherView: View {
             .navigationDestination(isPresented: $showRegisterPage) {
                 RegisterNewClassView(
                 ) {
-                        //TODO: handle registration
-                        showRegisterPage = false
+                    //TODO: handle registration
+                    showRegisterPage = false
                     updateClassStatus()
-                    }
+                }
                 
             }
             .navigationDestination(isPresented: $isAttendanceViewActive) {
-                AttendanceViewForDate(viewModel: viewModel) {
-                    // TODO: Save Data
-                    isAttendanceViewActive = false
-                }
+                AttendanceViewForDate(classId: selectedClassId ?? 1, date: Date())
             }
         }
-        
     }
 }

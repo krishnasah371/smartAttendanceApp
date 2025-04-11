@@ -260,11 +260,17 @@ struct RegisterNewClassView: View {
             let dateFormatter = DateFormatter()
             dateFormatter.dateFormat = "yyyy-MM-dd"
             
+            guard let scheduleData = try? JSONSerialization.data(withJSONObject: scheduleDict),
+            let scheduleString = String(data: scheduleData, encoding: .utf8) else {
+                    fatalError("Failed to convert schedule to JSON string")
+                }
+            let timeZone = selectedTimeZone.identifier.split(separator: "/").joined(separator: "/")
+            print(timeZone, "\n", selectedTimeZone.identifier)
             let payload = ClassRegistrationPayload(
                 name: className,
-                schedule: scheduleDict,
-                ble_id: beaconId,
-                timezone: selectedTimeZone.identifier,
+                schedule: scheduleString,
+                ble_id: "beaconId",
+                timezone: timeZone,
                 start_date: dateFormatter.string(from: startDate),
                 end_date: dateFormatter.string(from: endDate)
             )
@@ -280,12 +286,12 @@ struct RegisterNewClassView: View {
             do {
                 let response = try await ClassService.shared.registerANewClass(classRegistrationPayload:classRegistrationData)
                 print("response = ",response?.message)
+                onRegister()
             }  catch let error as NetworkError {
                 self.fetchError = error.localizedDescription
             } catch {
                 self.fetchError = error.localizedDescription
             }
-            onRegister()
         }
         
     }

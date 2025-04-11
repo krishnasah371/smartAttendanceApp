@@ -15,7 +15,8 @@ class BLEManager: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeriph
 
     // Whitelist of known devices
     private let knownDevices: [String: String] = [
-        "BlueCharm_199298": "LIB317 - Senior Seminar"
+        "BlueCharm_199298": "LIB317 - Senior Seminar",
+        "EDB2D681-23BB-4EBA-69E7-F11063BC4664": "KnownDevice1"
     ]
 
     override init() {
@@ -54,6 +55,7 @@ class BLEManager: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeriph
         // Optional: Stop scan after 5-10 seconds
             DispatchQueue.main.asyncAfter(deadline: .now() + 30) {
                 self.centralManager.stopScan()
+                print(self.discoveredDevices)
                 print("⛔️ Scan stopped")
             }
     }
@@ -80,7 +82,7 @@ class BLEManager: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeriph
             }
         }
     }
-
+    
     // MARK: - Connecting and Disconnecting Devices
     func connectToDevice(_ device: BLEDevice) {
         guard let peripheral = device.peripheral else {

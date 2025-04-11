@@ -47,9 +47,19 @@ struct ClassRegistrationResponse: Codable {
 
 struct ClassRegistrationPayload: Codable {
     let name: String
-    let schedule: [String:[String]] // JSON string
+    let schedule: String // JSON string
     let ble_id: String
     let timezone: String
     let start_date: String
     let end_date: String
+}
+
+struct SuccessResponse: Codable {
+    let message: String?
+}
+
+struct AttendenceResponse: Codable{
+    let userid: Int
+    let date: String
+    let status: String
 }
