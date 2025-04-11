@@ -10,12 +10,11 @@ class AuthService {
         let bodyData = try JSONEncoder().encode(loginData)
         
         do {
-            return try await APIClient.shared.request(.login, method: "POST", body: bodyData)
+            return try await APIClient.shared.request(.login, body: bodyData)
         } catch let networkError as NetworkError {
-            // Handle API error message
             throw networkError
         } catch {
-            throw NetworkError.serverError("An error occured while logging in.")
+            throw NetworkError.serverError("An error occurred while logging in.")
         }
     }
     
@@ -24,11 +23,11 @@ class AuthService {
         let bodyData = try JSONEncoder().encode(signupData)
         
         do {
-            return try await APIClient.shared.request(.signup, method: "POST", body: bodyData)
+            return try await APIClient.shared.request(.signup, body: bodyData)
         } catch let networkError as NetworkError {
             throw networkError
         } catch {
-            throw NetworkError.serverError("An error occured while signing up.")
+            throw NetworkError.serverError("An error occurred while signing up.")
         }
     }
 }

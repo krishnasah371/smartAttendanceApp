@@ -44,7 +44,7 @@ struct SplashScreenView: View {
                                     .navigationBarBackButtonHidden()
                             }
                             .navigationDestination(isPresented: $navigateToDashboard) {
-                                MainTabView()
+                                WelcomeView()
                                     .navigationBarBackButtonHidden()
                             }
                         }

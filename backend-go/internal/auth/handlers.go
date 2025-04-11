@@ -7,32 +7,52 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// LoginHandler authenticates a user and returns a JWT token if credentials are valid.
+// LoginHandler authenticates a user and returns a JWT token and user details.
 //
 // It expects a JSON request body containing:
 //   - email: The user's email address (required).
 //   - password: The user's password (required).
 //
-// If authentication is successful, it responds with a JSON object containing the JWT token.
-// Otherwise, it returns an error message indicating invalid credentials.
+// Responds with:
+//   - token: JWT token string
+//   - user: Basic user info (id, name, email, role, created_at)
+//   - success: true/false
+//   - message or error
 func LoginHandler(c *gin.Context) {
 	var req LoginRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"error":   err.Error(),
+		})
 		return
 	}
 
-	// Authenticate user
-	token, err := AuthenticateUserService(req.Email, req.Password)
+	// Authenticate and retrieve token + user
+	token, user, err := AuthenticateUserService(req.Email, req.Password)
 	if err != nil {
-		log.Warn().Str("email", req.Email).Msg("⚠️ Login failed: Ivalid credentials")
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid credentials"})
+		log.Warn().Str("email", req.Email).Msg("⚠️ Login failed: Invalid credentials")
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"success": false,
+			"error":   "invalid credentials",
+		})
 		return
 	}
 
-	// Return JWT token in reponse
-	c.JSON(http.StatusOK, LoginResponse{Token: token})
+	// Return token + user
+	c.JSON(http.StatusOK, gin.H{
+		"token":   token,
+		"success": true,
+		"user": gin.H{
+			"id":         user.ID,
+			"name":       user.Name,
+			"email":      user.Email,
+			"role":       user.Role,
+			"created_at": user.CreatedAt,
+		},
+		"message": "Login successful",
+	})
 }
 
 // RegisterHandler registers a new user and stores the details in the database.
@@ -49,18 +69,39 @@ func RegisterHandler(c *gin.Context) {
 	var req RegisterRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"error":   err.Error(),
+		})
 		return
 	}
 
-	err := RegistgerUserService(req.Name, req.Email, req.Password)
+	user, err := RegistgerUserService(req.Name, req.Email, req.Password)
 	if err != nil {
 		log.Error().Err(err).Msg("❌ Failed to register user")
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"success": false,
+			"error":   err.Error(),
+		})
 		return
 	}
 
-	c.JSON(http.StatusOK, RegisterResponse{Message: "User registered successfully"})
+	log.Info().
+		Str("email", user.Email).
+		Int("id", user.ID).
+		Msg("✅ User registered successfully")
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "User registered successfully",
+		"user": gin.H{
+			"id":         user.ID,
+			"name":       user.Name,
+			"email":      user.Email,
+			"role":       user.Role,
+			"created_at": user.CreatedAt,
+		},
+	})
 }
 
 // GetCurrentUserHandler returns the currently authenticated user's information.

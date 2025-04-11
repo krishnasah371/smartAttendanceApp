@@ -47,7 +47,7 @@ func CreateClassHandler(c *gin.Context) {
 	}
 
 	// Call updated repository function with BLE ID
-	err := CreateClass(req.Name, req.Schedule, teacherID, req.BLEID)
+	err := CreateClass(req.Name, req.Schedule, teacherID, req.BLEID, req.TimeZone, req.StartDate, req.EndDate)
 	if err != nil {
 		log.Error().
 			Err(err).
@@ -63,6 +63,9 @@ func CreateClassHandler(c *gin.Context) {
 		Int("teacher_id", teacherID).
 		Str("class_name", req.Name).
 		Str("ble_id", req.BLEID).
+		Str("time_zone", req.TimeZone).
+		Str("start_date", req.StartDate).
+		Str("end_date", req.EndDate).
 		Msg("✅ Class created successfully with BLE ID")
 
 	c.JSON(http.StatusOK, gin.H{"message": "Class created successfully"})

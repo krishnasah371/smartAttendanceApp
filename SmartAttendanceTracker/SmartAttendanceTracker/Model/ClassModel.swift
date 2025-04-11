@@ -6,15 +6,13 @@
 //
 import Foundation
 
-
 struct AttendanceRecord {
     let classId: UUID
     let date: Date
     var presentStudentIds: Set<UUID>
 }
 
-
-struct ClassModel: Identifiable, Hashable {
+struct ClassModel: Identifiable, Hashable, Codable {
     let id: UUID
     let name: String
     let teacherID: UUID

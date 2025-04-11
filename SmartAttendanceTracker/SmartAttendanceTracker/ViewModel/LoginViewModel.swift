@@ -13,44 +13,47 @@ class LoginViewModel: ObservableObject {
     @Published var isAuthenticated: Bool = false
 
     var isFormValid: Bool {
-        emailError == nil && passwordError == nil && !email.isEmpty
-            && !password.isEmpty
+        emailError == nil && passwordError == nil && !email.isEmpty && !password.isEmpty
     }
 
-    // Validate the email field
+    // MARK: - Validation
+
     func validateEmail() {
         if email.isEmpty {
-            emailError = "email is required."
+            emailError = "Email is required."
         } else if email.count < 5 {
-            emailError = "email must be at least 5 characters long."
+            emailError = "Email must be at least 5 characters long."
         } else {
             emailError = nil
         }
     }
 
-    // Validate the password field
     func validatePassword() {
         if password.isEmpty {
             passwordError = "Password is required."
         } else if password.count < 8 {
             passwordError = "Password must be at least 8 characters long."
         } else if !isValidPassword(password) {
-            passwordError =
-                "Password must contain at least one uppercase, one lowercase, one number, and one special character (@$!%*?&)."
+            passwordError = "Password must contain at least one uppercase, one lowercase, one number, and one special character (@$!%*?&)."
         } else {
             passwordError = nil
         }
     }
 
-    // Validate the entire form
     func validateForm() -> Bool {
         validateEmail()
         validatePassword()
-
         return isFormValid
     }
 
-    // Login function
+    private func isValidPassword(_ password: String) -> Bool {
+        let passwordRegex =
+        #"^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$"#
+        return NSPredicate(format: "SELF MATCHES %@", passwordRegex).evaluate(with: password)
+    }
+
+    // MARK: - Login
+
     func login() async {
         guard validateForm() else {
             errorMessage = "Please fix the errors in the form."
@@ -61,20 +64,17 @@ class LoginViewModel: ObservableObject {
         errorMessage = nil
 
         do {
-            var response = try await AuthService.shared.login(
-                email: email, password: password)
+            let response = try await AuthService.shared.login(email: email, password: password)
             print("Login response: \(response)")
 
-            // TODO: Temporary testing, remove:
-            response.success = !(response.token?.isEmpty ?? true)
-
-            if response.success == true, let token = response.token {
+            if response.success,
+               let token = response.token,
+               let user = response.user {
                 AuthManager.shared.saveToken(token)
+                AuthManager.shared.saveUser(UserModel(from: user))
                 isAuthenticated = true
             } else {
-                errorMessage = mapErrorMessage(
-                    response.error ?? response.message ?? "Invalid credentials."
-                )
+                errorMessage = mapErrorMessage(response.error ?? response.message ?? "Invalid credentials.")
                 print("Login failed: \(errorMessage ?? "Unknown error")")
             }
 
@@ -82,18 +82,13 @@ class LoginViewModel: ObservableObject {
             errorMessage = networkError.localizedDescription
             print("Login error: \(errorMessage ?? "Unknown error")")
         } catch {
-            errorMessage =
-                "An unexpected error occurred. Please try again later."
+            errorMessage = "An unexpected error occurred. Please try again later."
         }
+
         isLoading = false
     }
 
-    private func isValidPassword(_ password: String) -> Bool {
-        let passwordRegex =
-            #"^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$"#
-        return NSPredicate(format: "SELF MATCHES %@", passwordRegex).evaluate(
-            with: password)
-    }
+    // MARK: - Error Formatting
 
     private func mapErrorMessage(_ error: String) -> String {
         switch error.lowercased() {
