@@ -14,7 +14,7 @@ enum UserRole: String, Codable {
 }
 
 struct UserModel: Codable, Identifiable {
-    var id: String
+    var id: Int
     let email: String
     let name: String
     let role: UserRole
@@ -23,7 +23,7 @@ struct UserModel: Codable, Identifiable {
 
 extension UserModel {
     init(from user: User) {
-        self.id = "\(user.id)"
+        self.id = user.id
         self.name = user.name
         self.email = user.email
         self.role = UserRole(rawValue: user.role) ?? .student
@@ -31,3 +31,16 @@ extension UserModel {
 }
 
 
+
+
+// MARK: For attendence for each class
+struct StudentListResponse: Codable {
+    let students: [StudentInClassModel]
+}
+
+struct StudentInClassModel: Codable, Identifiable {
+    let id: Int
+    let name: String
+    let email: String
+    let enrolled_at: String
+}

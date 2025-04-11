@@ -72,23 +72,6 @@ struct TeacherClassAttendanceSummaryView: View {
         .padding()
         .navigationDestination(isPresented: $isAttendanceViewActive) {
             if let date = selectedDate {
-                let viewModel = AttendanceViewModel(
-                    classId: classId,
-                    date: date,
-                    // TODO: Data given by backend
-                    allStudents: [
-                        UserModel(id: "alice@school.com", email: "alice@school.com", name: "Alice Johnson", role: .student),
-                        UserModel(id: "bob@school.com", email: "bob@school.com", name: "Bob Smith", role: .student),
-                        UserModel(id: "charlie@school.com", email: "charlie@school.com", name: "Charlie Singh", role: .student),
-                        UserModel(id: "dave@school.com", email: "dave@school.com", name: "Dave Lee", role: .student),
-                        UserModel(id: "eve@school.com", email: "eve@school.com", name: "Eve Carter", role: .student),
-                        UserModel(id: "fatima@school.com", email: "fatima@school.com", name: "Fatima Khan", role: .student)
-                    ],
-                    initialPresentIds: attendanceRecordsByDate[date] ?? []
-                )
-                AttendanceViewForDate(viewModel: viewModel, onSave: {
-                    //TODO: Update Attendence Records on file ... only on save
-                })
             }
         }
     }

@@ -81,5 +81,28 @@ struct MainTabView: View {
 
         self.isLoading = false
     }
+    
+    private func fetchUserDetails() async {
+        do {
+            let fetched = try await ClassService.shared.fetchEnrolledClasses()
+            self.classes = fetched ?? []
+//            self.fetchError = nil
+        } catch let error as NetworkError {
+            self.fetchError = error.localizedDescription
+            self.classes = []
+
+            if case .unauthorized = error {
+                print("🚪 Unauthorized: Logging out")
+                AuthManager.shared.removeToken()
+                sessionManager.isLoggedIn = false
+                dismiss() // Automatically returns to login view if root is protected
+            }
+        } catch {
+            self.fetchError = error.localizedDescription
+            self.classes = []
+        }
+
+        self.isLoading = false
+    }
 
 }
