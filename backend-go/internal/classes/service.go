@@ -6,6 +6,13 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+// GetAllPublicClasses returns a list of all available classes for public access.
+//
+// This wraps the repository call in case future filtering or formatting is added.
+func GetAllPublicClasses() ([]ClassResponse, error) {
+	return FetchAllPublicClasses()
+}
+
 // GetClassesForUser returns class data for the current user depending on their role.
 //
 // - Teachers see classes they created.
@@ -31,6 +38,46 @@ func GetClassesForUser(userID int, role string) ([]ClassResponse, error) {
 			Msg("⛔ Unsupported role for class access")
 		return nil, errors.New("unauthorized or unsupported role")
 	}
+}
+
+// CreateClassWithValidation validates role and delegates to the repository layer.
+//
+// Returns error if role is not allowed or insert fails.
+func CreateClassWithValidation(userID int, role string, req CreateClassRequest) error {
+	if role != "teacher" && role != "admin" {
+		log.Warn().
+			Int("user_id", userID).
+			Str("role", role).
+			Msg("⛔ Unauthorized create attempt")
+		return errors.New("unauthorized")
+	}
+
+	err := InsertClass(
+		req.Name,
+		req.Schedule,
+		userID,
+		req.BLEID,
+		req.TimeZone,
+		req.StartDate,
+		req.EndDate,
+	)
+
+	if err != nil {
+		log.Error().
+			Err(err).
+			Int("user_id", userID).
+			Str("class_name", req.Name).
+			Msg("❌ Failed to create class")
+		return err
+	}
+
+	log.Info().
+		Int("user_id", userID).
+		Str("class_name", req.Name).
+		Str("ble_id", req.BLEID).
+		Msg("✅ Class created")
+
+	return nil
 }
 
 // EnrollUserIntoClass handles all logic for student enrollment.
@@ -136,4 +183,20 @@ func GetStudentsInClass(userID int, role string, classID int) ([]StudentInfo, er
 // Accessible to any authenticated user.
 func GetClassDetail(classID int) (*ClassDetailResponse, error) {
 	return GetClassByID(classID)
+}
+
+// UpdateClassBLEID verifies ownership and updates the BLE ID for a class.
+//
+// Only the teacher who owns the class can update its BLE device ID.
+// Returns an error if unauthorized or if the DB update fails.
+func UpdateClassBLEID(teacherID, classID int, newBLEID string) error {
+	owns, err := DoesTeacherOwnClass(teacherID, classID)
+	if err != nil {
+		return err
+	}
+	if !owns {
+		return errors.New("unauthorized: you do not own this class")
+	}
+
+	return UpdateBLEID(classID, newBLEID)
 }

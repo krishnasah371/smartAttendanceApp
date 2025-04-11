@@ -11,6 +11,10 @@ import (
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
+		isIOS := c.GetHeader("isIOS")
+		if isIOS == "true" {
+			authHeader = c.GetHeader("X-Authorization")
+		}
 		if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer ") {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Authorization header missing or malformed"})
 			return

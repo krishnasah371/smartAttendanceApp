@@ -11,13 +11,21 @@ import (
 // It registers the following routes under the "/attendance" and "/classes/:id/attendance" groups:
 //   - POST /classes/:id/attendance/mark  → Student marks attendance
 func RegisterRoutes(router *gin.RouterGroup) {
-	// Protected routes
 	attendanceGroup := router.Group("/classes/:id/attendance")
+
+	attendanceGroup.GET("/session", GetCurrentBLEIDHandler)
+
+	// Protected routes
 	attendanceGroup.Use(middleware.AuthMiddleware())
 	{
 		attendanceGroup.POST("/mark", MarkAttendanceHandler)
-		attendanceGroup.GET("", GetClassAttendanceHandler)
 		attendanceGroup.PUT("/:attendance_id", UpdateAttendanceHandler)
+		
+		attendanceGroup.GET("", GetClassAttendanceHandler)
+		attendanceGroup.GET("/by-date", GetAttendanceForDateHandler)
+		attendanceGroup.GET("/previous", GetPreviousAttendanceHandler)
+
+		attendanceGroup.POST("/start", StartAttendanceBroadcastHandler)
 	}
 
 	log.Info().Msg("✅ Attendance module initialized!")

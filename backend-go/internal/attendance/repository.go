@@ -184,3 +184,124 @@ func UpdateAttendanceRecord(attendanceID int, status string, location any, isMan
 
 	return nil
 }
+
+// GetAttendanceRecords fetches all attendance records for a given class.
+func GetAttendanceRecords(classID int) ([]AttendanceRecord, error) {
+	query := `
+		SELECT 
+			a.id, a.student_id, u.name, a.class_id, c.name, a.status,
+			a.timestamp, a.is_manual, a.location, a.created_at, a.updated_at
+		FROM attendance a
+		JOIN users u ON a.student_id = u.id
+		JOIN classes c ON a.class_id = c.id
+		WHERE a.class_id = $1
+		ORDER BY a.timestamp DESC
+	`
+
+	rows, err := database.DB.Query(query, classID)
+	if err != nil {
+		log.Error().Err(err).Int("class_id", classID).Msg("❌ Failed to fetch class attendance")
+		return nil, err
+	}
+	defer rows.Close()
+
+	var records []AttendanceRecord
+	for rows.Next() {
+		var rec AttendanceRecord
+		if err := rows.Scan(
+			&rec.ID, &rec.StudentID, &rec.StudentName,
+			&rec.ClassID, &rec.ClassName,
+			&rec.Status, &rec.Timestamp, &rec.IsManual,
+			&rec.Location, &rec.CreatedAt, &rec.UpdatedAt,
+		); err != nil {
+			log.Error().Err(err).Msg("❌ Failed to scan attendance record")
+			continue
+		}
+		records = append(records, rec)
+	}
+
+	return records, nil
+}
+
+// GetAttendanceRecordsByDate returns all attendance entries for a class on a specific date.
+func GetAttendanceRecordsByDate(classID int, date string) ([]AttendanceRecord, error) {
+	query := `
+		SELECT 
+			a.id, a.student_id, u.name, a.class_id, c.name, a.status,
+			a.timestamp, a.is_manual, a.location, a.created_at, a.updated_at
+		FROM attendance a
+		JOIN users u ON a.student_id = u.id
+		JOIN classes c ON a.class_id = c.id
+		WHERE a.class_id = $1 AND DATE(a.timestamp) = $2
+		ORDER BY a.timestamp DESC
+	`
+
+	rows, err := database.DB.Query(query, classID, date)
+	if err != nil {
+		log.Error().
+			Err(err).
+			Int("class_id", classID).
+			Str("date", date).
+			Msg("❌ Failed to query attendance records by date")
+		return nil, err
+	}
+	defer rows.Close()
+
+	var records []AttendanceRecord
+	for rows.Next() {
+		var rec AttendanceRecord
+		if err := rows.Scan(
+			&rec.ID, &rec.StudentID, &rec.StudentName,
+			&rec.ClassID, &rec.ClassName,
+			&rec.Status, &rec.Timestamp, &rec.IsManual,
+			&rec.Location, &rec.CreatedAt, &rec.UpdatedAt,
+		); err != nil {
+			log.Error().Err(err).Msg("❌ Failed to scan record in attendance by date")
+			continue
+		}
+		records = append(records, rec)
+	}
+
+	return records, nil
+}
+
+// GetAllAttendanceForClass returns all attendance records for the given class.
+func GetAllAttendanceForClass(classID int) ([]AttendanceRecord, error) {
+	query := `
+		SELECT 
+			a.id, a.student_id, u.name, a.class_id, c.name, a.status,
+			a.timestamp, a.is_manual, a.location, a.created_at, a.updated_at
+		FROM attendance a
+		JOIN users u ON a.student_id = u.id
+		JOIN classes c ON a.class_id = c.id
+		WHERE a.class_id = $1
+		ORDER BY a.timestamp DESC
+	`
+
+	rows, err := database.DB.Query(query, classID)
+	if err != nil {
+		log.Error().
+			Err(err).
+			Int("class_id", classID).
+			Msg("❌ Failed to fetch full attendance history")
+		return nil, err
+	}
+	defer rows.Close()
+
+	var records []AttendanceRecord
+	for rows.Next() {
+		var rec AttendanceRecord
+		if err := rows.Scan(
+			&rec.ID, &rec.StudentID, &rec.StudentName,
+			&rec.ClassID, &rec.ClassName,
+			&rec.Status, &rec.Timestamp, &rec.IsManual,
+			&rec.Location, &rec.CreatedAt, &rec.UpdatedAt,
+		); err != nil {
+			log.Error().Err(err).Msg("❌ Failed to scan attendance record")
+			continue
+		}
+		records = append(records, rec)
+	}
+
+	return records, nil
+}

@@ -1,72 +1,83 @@
 package classes
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
 )
 
-// / CreateClassHandler handles the creation of a new class, including BLE ID.
+// GetAllClassesHandler handles the public endpoint to list all classes.
+//
+// @Summary Get all classes (public)
+// @Description Returns basic class info (public access).
+// @Tags Classes
+// @Produce json
+// @Success 200 {object} map[string][]ClassResponse
+// @Failure 500 {object} map[string]string
+// @Router /classes/public [get]
+func GetAllClassesHandler(c *gin.Context) {
+	classes, err := GetAllPublicClasses()
+	if err != nil {
+		log.Error().Err(err).Msg("❌ Failed to fetch all public classes")
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch classes"})
+		return
+	}
+
+	log.Info().Int("count", len(classes)).Msg("✅ Public classes fetched")
+	c.JSON(http.StatusOK, gin.H{"classes": classes})
+}
+
+// CreateClassHandler handles the creation of a new class.
 //
 // @Summary Create a class
-// @Description Allows a teacher or admin to create a class by providing name, schedule, and BLE ID.
+// @Description Teachers or admins can create a class with BLE ID and schedule info.
 // @Tags Classes
 // @Accept json
 // @Produce json
 // @Param Authorization header string true "Bearer token"
 // @Param class body CreateClassRequest true "Class data"
 // @Success 200 {object} map[string]string "Class created successfully"
-// @Failure 400 {object} map[string]string "Invalid input"
-// @Failure 403 {object} map[string]string "Only teachers or admins allowed"
-// @Failure 500 {object} map[string]string "Internal server error"
+// @Failure 400,403,500 {object} map[string]string
 // @Router /classes [post]
 // @Security Bearer
 func CreateClassHandler(c *gin.Context) {
-	var req CreateClassRequest
 
-	// Bind request JSON to struct
+	headers := map[string]string{}
+	for k, v := range c.Request.Header {
+		headers[k] = strings.Join(v, ", ")
+	}
+
+	log.Info().
+		Str("method", c.Request.Method).
+		Str("url", c.Request.URL.String()).
+		Str("remote_addr", c.Request.RemoteAddr).
+		Interface("headers", headers).
+		Msg("📥 Incoming request to create class")
+
+	var req CreateClassRequest
+	fmt.Print(c.Request)
+
 	if err := c.ShouldBindJSON(&req); err != nil {
-		log.Warn().Err(err).Msg("⚠️ Invalid class creation input")
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	teacherID := c.GetInt("user_id")
+	userID := c.GetInt("user_id")
 	role := c.GetString("role")
-
-	// Role check
-	if role != "teacher" && role != "admin" {
-		log.Warn().
-			Int("user_id", teacherID).
-			Str("role", role).
-			Msg("⛔ Unauthorized attempt to create class")
-		c.JSON(http.StatusForbidden, gin.H{"error": "Only teachers or admins can create classes"})
+	fmt.Print(c.Request)
+	if err := CreateClassWithValidation(userID, role, req); err != nil {
+		switch err.Error() {
+		case "unauthorized":
+			c.JSON(http.StatusForbidden, gin.H{"error": "Only teachers or admins can create classes"})
+		default:
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not create class"})
+		}
 		return
 	}
-
-	// Call updated repository function with BLE ID
-	err := CreateClass(req.Name, req.Schedule, teacherID, req.BLEID, req.TimeZone, req.StartDate, req.EndDate)
-	if err != nil {
-		log.Error().
-			Err(err).
-			Int("teacher_id", teacherID).
-			Str("class_name", req.Name).
-			Str("ble_id", req.BLEID).
-			Msg("❌ Failed to create class in DB")
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not create class"})
-		return
-	}
-
-	log.Info().
-		Int("teacher_id", teacherID).
-		Str("class_name", req.Name).
-		Str("ble_id", req.BLEID).
-		Str("time_zone", req.TimeZone).
-		Str("start_date", req.StartDate).
-		Str("end_date", req.EndDate).
-		Msg("✅ Class created successfully with BLE ID")
 
 	c.JSON(http.StatusOK, gin.H{"message": "Class created successfully"})
 }
@@ -82,7 +93,16 @@ func CreateClassHandler(c *gin.Context) {
 // @Router /classes [get]
 // @Security Bearer
 func GetClassesHandler(c *gin.Context) {
-	// Extract user context from JWT middleware
+	fmt.Printf("📦 reached here: %+v\n", c.Request) // logs with field names
+
+	log.Info().
+		Str("method", c.Request.Method).
+		Str("url", c.Request.URL.String()).
+		Str("remote_addr", c.Request.RemoteAddr).
+		Str("user_agent", c.Request.UserAgent()).
+		Interface("headers", c.Request.Header).
+		Msg("📥 Incoming request")
+
 	userID := c.GetInt("user_id")
 	role := c.GetString("role")
 
@@ -91,7 +111,6 @@ func GetClassesHandler(c *gin.Context) {
 		Str("role", role).
 		Msg("📦 Fetching classes for user")
 
-	// Delegate role-specific class logic to service layer
 	classes, err := GetClassesForUser(userID, role)
 	if err != nil {
 		log.Error().
@@ -107,9 +126,12 @@ func GetClassesHandler(c *gin.Context) {
 		Int("user_id", userID).
 		Int("count", len(classes)).
 		Msg("✅ Classes fetched successfully")
-
-	// Return list of classes in JSON
+	if classes == nil {
+		classes = []ClassResponse{}
+	}
+	fmt.Printf("📦 classes: %+v\n", classes) // logs with field names
 	c.JSON(http.StatusOK, gin.H{"classes": classes})
+
 }
 
 // EnrollInClassHandler allows a student to enroll in a class.
@@ -259,4 +281,53 @@ func GetClassDetailHandler(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"class": class})
+}
+
+// UpdateBLEIDHandler allows a teacher to update the BLE ID of a class they own.
+//
+// @Summary Update BLE ID
+// @Description Allows a teacher to reconfigure the Bluetooth beacon for a class.
+// @Tags Classes
+// @Accept json
+// @Produce json
+// @Param id path int true "Class ID"
+// @Param Authorization header string true "Bearer token"
+// @Param body body UpdateBLEIDRequest true "New BLE ID"
+// @Success 200 {object} map[string]string "BLE ID updated successfully"
+// @Failure 400 {object} map[string]string "Invalid input"
+// @Failure 403 {object} map[string]string "Unauthorized"
+// @Failure 500 {object} map[string]string "Failed to update BLE ID"
+// @Router /classes/{id}/ble [put]
+// @Security Bearer
+func UpdateBLEIDHandler(c *gin.Context) {
+	classID, err := strconv.Atoi(c.Param("id"))
+	if err != nil || classID <= 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid class ID"})
+		return
+	}
+
+	var req UpdateBLEIDRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	userID := c.GetInt("user_id")
+	role := c.GetString("role")
+
+	if role != "teacher" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Only teachers can update BLE ID"})
+		return
+	}
+
+	if err := UpdateClassBLEID(userID, classID, req.BLEID); err != nil {
+		if err.Error() == "unauthorized: you do not own this class" {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update BLE ID"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "BLE ID updated successfully"})
 }
