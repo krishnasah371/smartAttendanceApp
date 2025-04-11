@@ -13,12 +13,11 @@ enum UserRole: String, Codable {
     case admin
 }
 
-
 struct UserModel: Codable, Identifiable {
-    var id: Int
-    var name: String
-    var email: String
-    var role: UserRole
+    var id: String
+    let email: String
+    let name: String
+    let role: UserRole
 }
 
 

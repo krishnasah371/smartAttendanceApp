@@ -74,7 +74,7 @@ struct DashboardView: View {
                 .padding()
                 .navigationDestination(item: $selectedClass) { classModel in
                     if user.role == .teacher {
-                        TeacherClassStatsView(classModel: classModel)
+                        TeacherClassAttendanceSummaryView(classId: classModel.id, className: classModel.name)
                     } else {
                         StudentClassStatsView(classModel: classModel)
                     }
@@ -104,25 +104,6 @@ struct DashboardView: View {
 
 
 
-struct ClassRegistrationView: View {
-    var body: some View {
-        Text("Class Registration View (Teacher)")
-    }
-}
-
-struct ClassView: View {
-    var body: some View {
-        Text("Enroll in Class View (Student)")
-    }
-}
-
-struct TeacherClassStatsView: View {
-    let classModel: ClassModel
-
-    var body: some View {
-        Text("Teacher View for \(classModel.name)")
-    }
-}
 
 struct StudentClassStatsView: View {
     let classModel: ClassModel
