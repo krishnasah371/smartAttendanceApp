@@ -15,7 +15,7 @@ struct AttendanceViewForDate: View {
                 .font(.title2)
                 .fontWeight(.bold)
 
-            Text("Class ID: \(viewModel.classId.uuidString.prefix(6))")
+            Text("Class ID: \(viewModel.classId)")
                 .font(.subheadline)
                 .foregroundColor(.gray)
 

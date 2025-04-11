@@ -29,39 +29,23 @@ struct RegisterNewClassView: View {
     
     @State private var scannedDevices: [BluetoothDevice] = []
     @State private var selectedDevice: BluetoothDevice?
-    
+    @State var closeBluetoothSearch = true
     @State private var isScanning = false
     @State private var showTimeZonePicker = false
     @StateObject private var bleManager = BLEManager()
+    @State private var fetchError: String?
     
     enum BeaconSetupMode {
         case none
         case scan
-        case existing
     }
     
     @State private var selectedBeaconMode: BeaconSetupMode = .none
-    @State private var isBeaconAttached: Bool = false
-    @State private var beaconId: String? = nil
+    @State private var beaconId: String = ""
     
     @State private var existingBeacons: [BluetoothDevice] = []
     @State private var isFetchingBeacons = false
     
-    func fetchExistingBeacons() {
-        isFetchingBeacons = true
-        selectedBeaconMode = .existing
-        
-        // Simulated API call
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-            self.existingBeacons = [
-                BluetoothDevice(id: UUID(), name: "Hall A Beacon"),
-                BluetoothDevice(id: UUID(), name: "Room 204 Beacon")
-            ]
-            isFetchingBeacons = false
-        }
-        
-        // 👉 Replace with real API call using URLSession if needed
-    }
     
     struct BeaconOption {
         let label: String
@@ -70,7 +54,7 @@ struct RegisterNewClassView: View {
     }
     
     
-    let allDays: [String] = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+    let allDays: [String] = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
     
     var body: some View {
         ScrollView {
@@ -79,14 +63,9 @@ struct RegisterNewClassView: View {
                 BeaconOption(label: "🔍 Scan a Device", mode: .scan) {
                     selectedBeaconMode = .scan
                 },
-                BeaconOption(label: "🗂 Setup Existing Beacon", mode: .existing) {
-                    fetchExistingBeacons()
-                    selectedBeaconMode = .existing
-                },
                 BeaconOption(label: "🚫 Skip for Now (Use My Phone)", mode: .none) {
                     selectedBeaconMode = .none
-                    isBeaconAttached = false
-                    beaconId = nil
+                    beaconId = ""
                 }
             ]
             
@@ -231,60 +210,85 @@ struct RegisterNewClassView: View {
                         }
                         
                     }
-                    if (selectedBeaconMode == .existing) {
-                        if isFetchingBeacons {
-                            ProgressView("Loading existing beacons...")
-                                .padding(.top)
-                                                    } else {
-                                                        VStack(alignment: .leading, spacing: 8) {
-                                                            Text("Select a Beacon:")
-                                                                .font(.subheadline)
-                                                                .padding(.top, 6)
-                            
-                                                            ForEach(existingBeacons) { beacon in
-                                                                Button {
-                                                                    beaconId = beacon.id.uuidString
-                                                                    isBeaconAttached = true
-                                                                } label: {
-                                                                    HStack {
-                                                                        Text(beacon.name)
-                                                                        Spacer()
-                                                                        if beaconId == beacon.id.uuidString {
-                                                                            Image(systemName: "checkmark.circle.fill")
-                                                                                .foregroundColor(.green)
-                                                                        }
-                                                                    }
-                                                                    .padding(8)
-                                                                    .background(Color.gray.opacity(0.1))
-                                                                    .cornerRadius(8)
-                                                                }
-                                                            }
-                                                        }
-                                                    }
-                        } else if (selectedBeaconMode == .scan) {
-                            BLEScanView(bleManager: bleManager, onBeaconSelected: {_ in })
-                        }
-                        
+                    if (selectedBeaconMode == .scan) {
+                        BLEScanView(bleManager: bleManager, onBeaconSelected: {_ in }, closeBluetoothSearch: closeBluetoothSearch )
                     }
                     
-                    // Final Register Button
-                    Button("Register Class") {
-                        //TODO: Fix this to capture and send form data
-                        onRegister()
+                }
+                
+                // Final Register Button
+                Button(action: {
+                    Task{
+                        await registerAClass()
                     }
-                    .font(.headline)
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color.primaryColorDark)
-                    .foregroundColor(.white)
-                    .cornerRadius(10)
+                    
+                }){
+                    Text("Register Class")
+                        .font(.headline)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.primaryColorDark)
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
                 }
                 .padding()
             }
         }
+        
     }
+        private func buildClassRegistrationPayload() -> ClassRegistrationPayload {
+            // Step 1: Convert schedule entries to [String: [String]]
+            var scheduleDict: [String:[String]] = [:]
+            for entry in scheduleEntries {
+                let timeFormatter = DateFormatter()
+                timeFormatter.dateFormat = "HHmm" // 24-hour format
+                timeFormatter.timeZone = selectedTimeZone // use user-selected timezone
+                timeFormatter.locale = Locale(identifier: "en_US_POSIX")
+                let start = timeFormatter.string(from: entry.startTime) // e.g., "0930"
+                let end = timeFormatter.string(from: entry.endTime)     // e.g., "1130"
+                let timeRange =  "\(start)-\(end)"
 
-
+                for day in entry.days {
+                    let capitalizedDay = day.capitalized
+                    scheduleDict[capitalizedDay,default: []].append(timeRange)
+                }
+            }
+            
+            // Step 2: Convert scheduleDict to a JSON string
+            print ("Schedule Data: \(scheduleDict)")
+            // Step 3: Format dates
+            let dateFormatter = DateFormatter()
+            dateFormatter.dateFormat = "yyyy-MM-dd"
+            
+            let payload = ClassRegistrationPayload(
+                name: className,
+                schedule: scheduleDict,
+                ble_id: beaconId,
+                timezone: selectedTimeZone.identifier,
+                start_date: dateFormatter.string(from: startDate),
+                end_date: dateFormatter.string(from: endDate)
+            )
+            
+            return payload
+        }
+        private func registerAClass() async
+        {
+            let classRegistrationData = buildClassRegistrationPayload()
+            
+            print(classRegistrationData)
+            closeBluetoothSearch = true
+            do {
+                let response = try await ClassService.shared.registerANewClass(classRegistrationPayload:classRegistrationData)
+                print("response = ",response?.message)
+            }  catch let error as NetworkError {
+                self.fetchError = error.localizedDescription
+            } catch {
+                self.fetchError = error.localizedDescription
+            }
+            onRegister()
+        }
+        
+    }
 //
 //#Preview {
 //    RegisterNewClassView()

@@ -19,7 +19,7 @@ struct BLE_ClassActionCardView: View {
                 .font(.headline)
                 .foregroundColor(.primaryColorDarker)
 
-            let scheduleSummary = getScheduleSummary(from: classInfo.schedule.classSchedule)
+            let scheduleSummary = getScheduleSummary(from: classInfo.schedule)
             if !scheduleSummary.isEmpty {
                 Text("Schedule: \(scheduleSummary)")
                     .font(.caption)

@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct TeacherClassAttendanceSummaryView: View {
-    let classId: UUID
+    let classId: Int
     let className: String
 
     @State private var showStudentView = false

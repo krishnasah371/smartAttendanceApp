@@ -12,8 +12,8 @@ struct BLE_StudentView: View {
     let inSessionClasses: [ClassModel]
     let otherClasses: [ClassModel]
     let allClasses : [ClassModel]
+    let updateClassStatus: () -> Void
     @State private var showEnrollPage = false
-    
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -111,12 +111,10 @@ struct BLE_StudentView: View {
             .navigationDestination(isPresented: $showEnrollPage) {
                     EnrollInAClassView(
                             availableClasses: allClasses,
-                            enrolledClassIDs: Set((inSessionClasses+otherClasses).map(\.id))
-                        ) { selectedClass in
-                            //TODO: handle enrollment
-                            
-                            showEnrollPage = false
-                        }
+                            enrolledClassIDs: Set((inSessionClasses+otherClasses).map(\.id)),
+                            didEnrollInClass: updateClassStatus
+                        )
+                
                     }
         }
     }

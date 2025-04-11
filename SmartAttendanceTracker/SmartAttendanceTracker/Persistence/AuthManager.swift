@@ -13,7 +13,7 @@ class AuthManager {
     }
 
     func getToken() -> String? {
-        UserDefaults.standard.string(forKey: tokenKey)
+        return UserDefaults.standard.string(forKey: tokenKey)
     }
 
     func removeToken() {

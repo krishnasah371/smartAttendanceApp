@@ -28,7 +28,7 @@ struct TodayScheduleView: View {
 
             // Collect all class-time pairs for today
             let todaysSchedule: [TodayScheduleItem] = classes.flatMap { classModel in
-                let times = getTodaySchedule(from: classModel.schedule.classSchedule, in: classModel.schedule.timeZone)
+                let times = getTodaySchedule(from: classModel.schedule, in: classModel.timeZone)
                 return times.map { TodayScheduleItem(className: classModel.name, time: $0) }
             }
 
