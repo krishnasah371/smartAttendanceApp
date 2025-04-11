@@ -12,7 +12,8 @@ struct DashboardView: View {
     let classes: [ClassModel]
     @State private var selectedClass: ClassModel?
     @State private var showRegisterOrJoinClassPage = false
-    
+    let updateClassStatus: () -> Void
+
     var totalAttendance: Int {
         classes.map(\.attendancePercentage).reduce(0, +) / max(1, classes.count)
     }
@@ -84,13 +85,11 @@ struct DashboardView: View {
                         RegisterNewClassView( onRegister: {
                             // TODO: Handle Register
                             showRegisterOrJoinClassPage = false
+//                            updateClassStatus()
                         })
                         
                     } else {
-                        EnrollInAClassView(availableClasses: classes, enrolledClassIDs:Set(classes.map(\.id)), onEnroll:  { selectedClass in
-                            // TODO: handle enrollment
-                            showRegisterOrJoinClassPage = false
-                        })
+                        EnrollInAClassView(availableClasses: classes, enrolledClassIDs:Set(classes.map(\.id)), didEnrollInClass: updateClassStatus)
                     }
                 }
             }

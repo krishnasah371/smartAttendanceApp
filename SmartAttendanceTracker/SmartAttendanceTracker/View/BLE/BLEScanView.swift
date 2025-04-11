@@ -3,6 +3,7 @@ import SwiftUI
 struct BLEScanView: View {
     @ObservedObject var bleManager: BLEManager
     var onBeaconSelected: (BLEDevice) -> Void
+    var closeBluetoothSearch:Bool
     @State private var selectedDeviceID: String? = nil
 //    init() {
 //        #if debug

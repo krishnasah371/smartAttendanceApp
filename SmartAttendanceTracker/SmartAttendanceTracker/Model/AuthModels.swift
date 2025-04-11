@@ -36,3 +36,20 @@ struct SignupResponse: Codable {
     let message: String?
     let error: String?
 }
+
+struct ClassEnrollResponse: Codable {
+    let message: String?
+}
+
+struct ClassRegistrationResponse: Codable {
+    let message: String?
+}
+
+struct ClassRegistrationPayload: Codable {
+    let name: String
+    let schedule: [String:[String]] // JSON string
+    let ble_id: String
+    let timezone: String
+    let start_date: String
+    let end_date: String
+}

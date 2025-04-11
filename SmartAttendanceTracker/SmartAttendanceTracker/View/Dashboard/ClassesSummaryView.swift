@@ -28,7 +28,7 @@ struct ClassesSummaryView: View {
                                 .foregroundColor(.primaryColorDarker)
                         }
                         
-                        let scheduleSummary = getScheduleSummary(from: classInfo.schedule.classSchedule)
+                        let scheduleSummary = getScheduleSummary(from: classInfo.schedule)
                         if !scheduleSummary.isEmpty {
                             Text("Schedule: \(scheduleSummary)")
                                 .font(.caption)
@@ -47,8 +47,8 @@ struct ClassesSummaryView: View {
                                 .foregroundColor(.primaryColorDarker)
                         
                         if let next = getNextClassTime(
-                            for: classInfo.schedule.classSchedule,
-                            timeZone: classInfo.schedule.timeZone
+                            for: classInfo.schedule,
+                            timeZone: classInfo.timeZone
                         ) {
                             Text("Next Class: \(next)")
                                 .font(.caption)

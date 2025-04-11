@@ -2,6 +2,7 @@ import Foundation
 import SwiftUI
 
 struct MainTabView: View {
+    @EnvironmentObject var sessionManager: SessionManager
     @State private var selectedTab = 0
     @State private var classes: [ClassModel] = []
     @State private var isLoading = true
@@ -26,13 +27,17 @@ struct MainTabView: View {
                 }
             } else {
                 TabView(selection: $selectedTab) {
-                    DashboardView(user: user, classes: classes)
+                    DashboardView(user: user, classes: classes,updateClassStatus: {Task {
+                        await fetchUserClasses() // <-- async function
+                    }})
                         .tabItem {
                             Label("Dashboard", systemImage: "rectangle.grid.2x2")
                         }
                         .tag(0)
 
-                    BLEMainView(user: user, enrolledClasses: classes)
+                    BLEMainView(user: user, enrolledClasses: classes, updateClassStatus: {Task {
+                        await fetchUserClasses() // <-- async function
+                    }})
                         .tabItem {
                             Label("Attendance", systemImage: "calendar")
                         }
@@ -47,28 +52,26 @@ struct MainTabView: View {
                 .tabViewStyle(DefaultTabViewStyle())
             }
         } else {
-            VStack {
-                ProgressView("Loading user...")
-                    .padding(.bottom, 8)
-                Text("User not found. Please log in again.")
-                    .font(.caption)
-                    .foregroundColor(.red)
-            }
+            WelcomeView()
         }
+    }
+    func updateClassStatus() async {
+        await fetchUserClasses()
     }
 
     private func fetchUserClasses() async {
         do {
             let fetched = try await ClassService.shared.fetchEnrolledClasses()
-            self.classes = fetched
-            self.fetchError = nil
+            self.classes = fetched ?? []
+//            self.fetchError = nil
         } catch let error as NetworkError {
             self.fetchError = error.localizedDescription
             self.classes = []
 
             if case .unauthorized = error {
                 print("🚪 Unauthorized: Logging out")
-                AuthManager.shared.logout()
+                AuthManager.shared.removeToken()
+                sessionManager.isLoggedIn = false
                 dismiss() // Automatically returns to login view if root is protected
             }
         } catch {

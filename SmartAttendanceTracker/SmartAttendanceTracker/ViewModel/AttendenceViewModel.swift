@@ -10,13 +10,13 @@ import Foundation
 
 
 class AttendanceViewModel: ObservableObject {
-    let classId: UUID
+    let classId: Int
     let date: Date
     let allStudents: [UserModel]
 
     @Published var presentStudentIds: Set<String>
 
-    init(classId: UUID, date: Date, allStudents: [UserModel], initialPresentIds: [String]) {
+    init(classId: Int, date: Date, allStudents: [UserModel], initialPresentIds: [String]) {
         self.classId = classId
         self.date = date
         self.allStudents = allStudents

@@ -11,6 +11,8 @@ struct BLE_TeacherView: View {
     let user: UserModel
     let inSessionClasses: [ClassModel]
     let otherClasses: [ClassModel]
+    var updateClassStatus: () -> Void
+
     @State private var isAttendanceViewActive = false
 
 
@@ -38,7 +40,7 @@ struct BLE_TeacherView: View {
                ]
 
                let viewModel = AttendanceViewModel(
-                   classId: UUID(), // Class ID is still a UUID (unchanged)
+                   classId: 1, // Class ID is still a UUID (unchanged)
                    date: Date(),
                    allStudents: students,
                    initialPresentIds: presentEmails
@@ -144,10 +146,11 @@ struct BLE_TeacherView: View {
             .background(Color.white)
             .ignoresSafeArea()
             .navigationDestination(isPresented: $showRegisterPage) {
-                RegisterNewClassView() {
+                RegisterNewClassView(
+                ) {
                         //TODO: handle registration
-                        
                         showRegisterPage = false
+                    updateClassStatus()
                     }
                 
             }

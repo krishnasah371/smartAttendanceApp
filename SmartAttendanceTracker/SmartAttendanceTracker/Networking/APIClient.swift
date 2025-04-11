@@ -21,7 +21,9 @@ class APIClient {
         if endpoint.requiresAuth {
             if let token = AuthManager.shared.getToken() {
                 print("🔐 Attaching token to request")
-                request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+                request.setValue("Bearer \(token)", forHTTPHeaderField: "X-Authorization")
+                request.setValue("true", forHTTPHeaderField: "isIOS")
+
             } else {
                 print("❌ Token missing for authenticated request")
             }
@@ -33,6 +35,7 @@ class APIClient {
                 print("📤 Sending Request to \(url): \(jsonString)")
             }
         }
+        print("🔗 Full URL being called: \(request.url?.absoluteString ?? "nil")")
 
         let (data, response) = try await URLSession.shared.data(for: request)
 
@@ -42,18 +45,24 @@ class APIClient {
 
         do {
             let decodedResponse = try JSONDecoder().decode(T.self, from: data)
-            print("📥 Received Success Response: \(decodedResponse)")
             return decodedResponse
-        } catch {
-            do {
-                let apiErrorResponse = try JSONDecoder().decode(APIErrorResponse.self, from: data)
+
+        } catch let decodingError {
+            print("❌ JSON Decoding Failed: \(decodingError)")
+            
+            // Attempt to decode known API error
+            if let apiErrorResponse = try? JSONDecoder().decode(APIErrorResponse.self, from: data) {
                 let errorMsg = apiErrorResponse.error ?? apiErrorResponse.message ?? "An unknown error occurred."
                 print("❌ API Error Response: \(errorMsg)")
                 throw NetworkError.serverError(errorMsg)
-            } catch {
-                print("❌ Failed to decode error response: \(error.localizedDescription)")
-                throw NetworkError.badResponse
             }
+
+            // Log raw response just in case
+            if let raw = String(data: data, encoding: .utf8) {
+                print("📦 Raw response that failed decoding:\n\(raw)")
+            }
+
+            throw NetworkError.decodingFailed
         }
     }
 }

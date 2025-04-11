@@ -23,7 +23,7 @@ struct UserModel: Codable, Identifiable {
 
 extension UserModel {
     init(from user: User) {
-        self.id = user.id
+        self.id = "\(user.id)"
         self.name = user.name
         self.email = user.email
         self.role = UserRole(rawValue: user.role) ?? .student

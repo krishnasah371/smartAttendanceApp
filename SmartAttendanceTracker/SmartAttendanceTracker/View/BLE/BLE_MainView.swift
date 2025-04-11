@@ -10,7 +10,8 @@ import SwiftUI
 struct BLEMainView: View {
     let user: UserModel
     let enrolledClasses: [ClassModel]
-    
+    var updateClassStatus: () -> Void
+
     func splitClassesBySessionStatus(classes: [ClassModel]) -> (inSession: [ClassModel], other: [ClassModel]) {
         var inSession: [ClassModel] = []
         var other: [ClassModel] = []
@@ -27,7 +28,7 @@ struct BLEMainView: View {
     }
     func isClassInSession(classModel: ClassModel) -> Bool {
         let schedule = classModel.schedule
-        let timeZone = schedule.timeZone
+        let timeZone = classModel.timeZone
         let now = Date()
 
         var calendar = Calendar.current
@@ -38,7 +39,7 @@ struct BLEMainView: View {
         formatter.timeZone = timeZone
 
         let today = formatter.string(from: now)
-        guard let todaySlots = schedule.classSchedule.days[today] else {
+        guard let todaySlots = schedule.days[today] else {
             return false
         }
 
@@ -93,14 +94,16 @@ struct BLEMainView: View {
                 BLE_TeacherView(
                     user: user,
                     inSessionClasses: inSession,
-                    otherClasses: other
+                    otherClasses: other,
+                    updateClassStatus: updateClassStatus
                 )
             } else {
                 BLE_StudentView(
                     user: user,
                     inSessionClasses: inSession,
                     otherClasses: other,
-                    allClasses: enrolledClasses // CHANGE THIS
+                    allClasses: enrolledClasses, // CHANGE THIS
+                    updateClassStatus:updateClassStatus
                 )
             }
         }

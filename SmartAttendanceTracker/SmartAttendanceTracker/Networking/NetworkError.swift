@@ -7,6 +7,7 @@ enum NetworkError: Error, LocalizedError {
     case serverError(String)
     case unauthorized
     case noData
+    case decodingFailed
 
     var errorDescription: String? {
         switch self {
@@ -22,6 +23,8 @@ enum NetworkError: Error, LocalizedError {
             return "Unauthorized. Please login again."
         case .noData:
             return "No data returned from the server."
+        case .decodingFailed:
+            return "Decoding Failed."
         }
     }
 }
