@@ -77,9 +77,11 @@ func InsertClass(name, schedule string, teacherID int, bleID, timeZone, startDat
 // GetClassesByTeacherID fetches all classes created by a specific teacher.
 func GetClassesByTeacherID(teacherID int) ([]ClassResponse, error) {
 	query := `
-		SELECT id, name, schedule, teacher_id, ble_id, timezone, start_date, end_date
-		FROM classes
-		WHERE teacher_id = $1
+		SELECT c.id, c.name, c.schedule, c.teacher_id, u.name, 
+		       c.ble_id, c.timezone, c.start_date, c.end_date
+		FROM classes c
+		JOIN users u ON c.teacher_id = u.id
+		WHERE c.teacher_id = $1
 	`
 
 	rows, err := database.DB.Query(query, teacherID)
@@ -95,7 +97,7 @@ func GetClassesByTeacherID(teacherID int) ([]ClassResponse, error) {
 	var classes []ClassResponse
 	for rows.Next() {
 		var class ClassResponse
-		if err := rows.Scan(&class.ID, &class.Name, &class.Schedule, &class.TeacherID, &class.BLEID, &class.TimeZone, &class.StartDate, &class.EndDate); err != nil {
+		if err := rows.Scan(&class.ID, &class.Name, &class.Schedule, &class.TeacherID, &class.TeacherName, &class.BLEID, &class.TimeZone, &class.StartDate, &class.EndDate); err != nil {
 			log.Error().Err(err).Msg("❌ Failed to scan class row (teacher)")
 			continue
 		}
