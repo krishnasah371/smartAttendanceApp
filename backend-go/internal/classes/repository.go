@@ -14,10 +14,10 @@ import (
 // Logs success or failure with relevant context.
 //
 // Returns an error if the insert fails.
-func CreateClass(name, schedule string, teacherID int, bleID string) error {
+func CreateClass(name, schedule string, teacherID int, bleID, timeZone, startDate, endDate string) error {
 	query := `
-		INSERT INTO classes (name, schedule, teacher_id, ble_id)
-		VALUES ($1, $2, $3, $4)
+		INSERT INTO classes (name, schedule, teacher_id, ble_id, timezone, start_date, end_date)
+		VALUES ($1, $2, $3, $4, $5, $6, $7)
 	`
 
 	_, err := database.DB.Exec(query, name, schedule, teacherID, bleID)
@@ -43,7 +43,7 @@ func CreateClass(name, schedule string, teacherID int, bleID string) error {
 // GetClassesByTeacherID fetches all classes created by a specific teacher.
 func GetClassesByTeacherID(teacherID int) ([]ClassResponse, error) {
 	query := `
-		SELECT id, name, schedule, teacher_id, ble_id
+		SELECT id, name, schedule, teacher_id, ble_id, timezone, start_date, end_date
 		FROM classes
 		WHERE teacher_id = $1
 	`
@@ -61,7 +61,7 @@ func GetClassesByTeacherID(teacherID int) ([]ClassResponse, error) {
 	var classes []ClassResponse
 	for rows.Next() {
 		var class ClassResponse
-		if err := rows.Scan(&class.ID, &class.Name, &class.Schedule, &class.TeacherID, &class.BLEID); err != nil {
+		if err := rows.Scan(&class.ID, &class.Name, &class.Schedule, &class.TeacherID, &class.BLEID, class.TimeZone, class.StartDate, class.EndDate); err != nil {
 			log.Error().Err(err).Msg("❌ Failed to scan class row (teacher)")
 			continue
 		}
@@ -74,7 +74,8 @@ func GetClassesByTeacherID(teacherID int) ([]ClassResponse, error) {
 // GetClassesByStudentID fetches all classes a student is enrolled in, including the teacher's name.
 func GetClassesByStudentID(studentID int) ([]ClassResponse, error) {
 	query := `
-		SELECT c.id, c.name, c.schedule, c.teacher_id, u.name
+		SELECT c.id, c.name, c.schedule, c.teacher_id, u.name, 
+		       c.ble_id, c.timezone, c.start_date, c.end_date
 		FROM class_enrollments ce
 		JOIN classes c ON ce.class_id = c.id
 		JOIN users u ON c.teacher_id = u.id
@@ -95,7 +96,18 @@ func GetClassesByStudentID(studentID int) ([]ClassResponse, error) {
 	var classes []ClassResponse
 	for rows.Next() {
 		var class ClassResponse
-		if err := rows.Scan(&class.ID, &class.Name, &class.Schedule, &class.TeacherID, &class.TeacherName); err != nil {
+		err := rows.Scan(
+			&class.ID,
+			&class.Name,
+			&class.Schedule,
+			&class.TeacherID,
+			&class.TeacherName,
+			&class.BLEID,
+			&class.TimeZone,
+			&class.StartDate,
+			&class.EndDate,
+		)
+		if err != nil {
 			log.Error().Err(err).Msg("❌ Failed to scan class row (student)")
 			continue
 		}
@@ -287,7 +299,8 @@ func GetClassOwnerID(classID int) (int, error) {
 // GetClassByID fetches full class details by ID, including teacher name.
 func GetClassByID(classID int) (*ClassDetailResponse, error) {
 	query := `
-		SELECT c.id, c.name, c.schedule, c.teacher_id, u.name, c.created_at
+		SELECT c.id, c.name, c.schedule, c.teacher_id, u.name, 
+		       c.ble_id, c.timezone, c.start_date, c.end_date, c.created_at
 		FROM classes c
 		JOIN users u ON c.teacher_id = u.id
 		WHERE c.id = $1
@@ -300,6 +313,10 @@ func GetClassByID(classID int) (*ClassDetailResponse, error) {
 		&class.Schedule,
 		&class.TeacherID,
 		&class.TeacherName,
+		&class.BLEID,
+		&class.TimeZone,
+		&class.StartDate,
+		&class.EndDate,
 		&class.CreatedAt,
 	)
 	if err == sql.ErrNoRows {

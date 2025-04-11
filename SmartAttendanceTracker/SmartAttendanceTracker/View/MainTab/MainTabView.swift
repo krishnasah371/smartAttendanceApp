@@ -1,77 +1,82 @@
-//
-//  MainTabView.swift
-//  SmartAttendanceTracker
-//
-//  Created by Bipul Aryal on 4/7/25.
-//
-
 import Foundation
 import SwiftUI
 
 struct MainTabView: View {
     @State private var selectedTab = 0
+    @State private var classes: [ClassModel] = []
+    @State private var isLoading = true
+    @State private var fetchError: String?
+
     @Environment(\.dismiss) var dismiss
 
-    
-    let user: UserModel = UserModel(
-        email: "bipul@example.com",
-        name: "Bipul",
-        role: .teacher
-    )
-    let sampleClasses: [ClassModel] = [
-        .init(id: UUID(), name: "Math 101", teacherID: UUID(),teacherName: "Miss Tee", schedule: Schedule(
-            startDate: Date(),
-            endDate: Calendar.current.date(byAdding: .month, value: 6, to: Date())!,
-            timeZone: TimeZone.current,
-            classSchedule: ClassSchedule(days: [
-                "Monday": ["08:30-09:30", "14:00-15:00"],
-                "Tuesday": ["10:00-11:00"],
-                "Friday": ["13:00-14:00"]
-            ])
-        ), attendancePercentage: 85),
-        .init(id: UUID(), name: "Physics 202", teacherID: UUID(),teacherName: "Miss TwoTee", schedule: Schedule(
-            startDate: Date(),
-            endDate: Calendar.current.date(byAdding: .month, value: 6, to: Date())!,
-            timeZone: TimeZone.current,
-            classSchedule: ClassSchedule(days: [
-                "Monday": ["08:30-09:30", "14:00-15:00"],
-                "Tuesday": ["10:00-11:00"],
-                "Friday": ["13:00-14:00"]
-            ])
-        ), attendancePercentage: 92),
-        .init(id: UUID(), name: "Biology 303", teacherID: UUID(), teacherName: "Mr ThreeTee", schedule: Schedule(
-            startDate: Date(),
-            endDate: Calendar.current.date(byAdding: .month, value: 6, to: Date())!,
-            timeZone: TimeZone.current,
-            classSchedule: ClassSchedule(days: [
-                "Monday": ["08:30-09:30", "14:00-15:00"],
-                "Tuesday": ["10:00-11:00", "20:00-21:00"],
-                "Friday": ["13:00-14:00"]
-            ])
-        ),  attendancePercentage: 78)
-    ]
-    
     var body: some View {
-        TabView(selection: $selectedTab) {
-            DashboardView(user: user, classes: sampleClasses)
-                .tabItem {
-                    Label("Dashboard", systemImage: "rectangle.grid.2x2")
+        if let user = AuthManager.shared.getUser() {
+            if isLoading {
+                ProgressView("Fetching your classes...")
+                    .task {
+                        await fetchUserClasses()
+                    }
+            } else if let error = fetchError {
+                VStack {
+                    Text("Failed to load classes.")
+                        .font(.headline)
+                    Text(error)
+                        .font(.caption)
+                        .foregroundColor(.red)
                 }
-                .tag(0)
+            } else {
+                TabView(selection: $selectedTab) {
+                    DashboardView(user: user, classes: classes)
+                        .tabItem {
+                            Label("Dashboard", systemImage: "rectangle.grid.2x2")
+                        }
+                        .tag(0)
 
-            BLEMainView(user: user, enrolledClasses: sampleClasses)
-                .tabItem {
-                    Label("Attendance", systemImage: "calendar")
-                }
-                .tag(1)
+                    BLEMainView(user: user, enrolledClasses: classes)
+                        .tabItem {
+                            Label("Attendance", systemImage: "calendar")
+                        }
+                        .tag(1)
 
-            SettingsView()
-                .tabItem {
-                    Label("Settings", systemImage: "gearshape")
+                    SettingsView()
+                        .tabItem {
+                            Label("Settings", systemImage: "gearshape")
+                        }
+                        .tag(2)
                 }
-                .tag(2)
+                .tabViewStyle(DefaultTabViewStyle())
+            }
+        } else {
+            VStack {
+                ProgressView("Loading user...")
+                    .padding(.bottom, 8)
+                Text("User not found. Please log in again.")
+                    .font(.caption)
+                    .foregroundColor(.red)
+            }
         }
-        .tabViewStyle(DefaultTabViewStyle()) // ✅ For iPad bottom tab bar
     }
-}
 
+    private func fetchUserClasses() async {
+        do {
+            let fetched = try await ClassService.shared.fetchEnrolledClasses()
+            self.classes = fetched
+            self.fetchError = nil
+        } catch let error as NetworkError {
+            self.fetchError = error.localizedDescription
+            self.classes = []
+
+            if case .unauthorized = error {
+                print("🚪 Unauthorized: Logging out")
+                AuthManager.shared.logout()
+                dismiss() // Automatically returns to login view if root is protected
+            }
+        } catch {
+            self.fetchError = error.localizedDescription
+            self.classes = []
+        }
+
+        self.isLoading = false
+    }
+
+}

@@ -7,15 +7,28 @@
 
 import Foundation
 
-enum UserRole: String, Codable, Identifiable {
-    case teacher
+enum UserRole: String, Codable {
     case student
-    var id: String { self.rawValue }
+    case teacher
+    case admin
 }
 
-struct UserModel: Codable {
-    let email: String
-    let name: String
-    let role: UserRole
+
+struct UserModel: Codable, Identifiable {
+    var id: Int
+    var name: String
+    var email: String
+    var role: UserRole
 }
+
+
+extension UserModel {
+    init(from user: User) {
+        self.id = user.id
+        self.name = user.name
+        self.email = user.email
+        self.role = UserRole(rawValue: user.role) ?? .student
+    }
+}
+
 

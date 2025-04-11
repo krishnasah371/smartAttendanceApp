@@ -131,4 +131,3 @@ struct StudentClassStatsView: View {
         Text("Student View for \(classModel.name)")
     }
 }
-

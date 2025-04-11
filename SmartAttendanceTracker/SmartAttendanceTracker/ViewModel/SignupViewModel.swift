@@ -18,26 +18,21 @@ class SignupViewModel: ObservableObject {
     @Published var isRegistrationSuccess: Bool = false
 
     init(role: UserRole) {
-            self.role = role
-        }
-    
+        self.role = role
+    }
+
     var isFormValid: Bool {
         emailError == nil && passwordError == nil && confirmPasswordError == nil
             && !name.isEmpty && !email.isEmpty && !password.isEmpty
             && !confirmPassword.isEmpty
     }
-    
 
-    // Validate name field
+    // MARK: - Validation
+
     func validateName() {
-        if name.isEmpty {
-            nameError = "name is required."
-        } else {
-            nameError = nil
-        }
+        nameError = name.isEmpty ? "Name is required." : nil
     }
 
-    // Validate the email field
     func validateEmail() {
         if email.isEmpty {
             emailError = "Email is required."
@@ -48,21 +43,18 @@ class SignupViewModel: ObservableObject {
         }
     }
 
-    // Validate password field
     func validatePassword() {
         if password.isEmpty {
             passwordError = "Password is required."
         } else if password.count < 8 {
             passwordError = "Password must be at least 8 characters long."
         } else if !isValidPassword(password) {
-            passwordError =
-                "Password must contain at least one uppercase, one lowercase, one number, and one special character (@$!%*?&)."
+            passwordError = "Password must contain at least one uppercase, one lowercase, one number, and one special character (@$!%*?&)."
         } else {
             passwordError = nil
         }
     }
 
-    // Validate confirm password field
     func validateConfirmPassword() {
         if confirmPassword.isEmpty {
             confirmPasswordError = "Confirm password is required."
@@ -73,16 +65,15 @@ class SignupViewModel: ObservableObject {
         }
     }
 
-    // Validate entire form
     func validateForm() -> Bool {
+        validateName()
         validateEmail()
         validatePassword()
         validateConfirmPassword()
-
         return isFormValid
     }
 
-    // Signup function
+    // MARK: - Signup + Auto-login
     func signup() async {
         guard validateForm() else {
             errorMessage = "Please fix the errors in the form"
@@ -93,46 +84,55 @@ class SignupViewModel: ObservableObject {
         errorMessage = nil
 
         do {
-            var response = try await AuthService.shared.signup(
-                name: name, email: email, password: password, role:role)
+            let response = try await AuthService.shared.signup(
+                name: name,
+                email: email,
+                password: password,
+                role: role
+            )
 
-            print("✅ Signup successful: \(response)")  // ✅ Debug success response
-            
-            // TODO: Remove only for testing
-            response.success = (response.message == "User registered successfully")
+            print("✅ Signup response: \(response)")
 
             if response.success == true {
                 isRegistrationSuccess = true
+
+                // ✅ Auto-login
+                let loginResponse = try await AuthService.shared.login(
+                    email: email, password: password
+                )
+                print("🔑 Login after signup: \(loginResponse)")
+
+                if loginResponse.success,
+                   let token = loginResponse.token,
+                   let user = loginResponse.user {
+                    AuthManager.shared.saveToken(token)
+                    AuthManager.shared.saveUser(UserModel(from: user))
+                    isAuthenticated = true
+                    clearForm()
+                } else {
+                    errorMessage = mapErrorMessage(
+                        loginResponse.error ?? loginResponse.message ?? "Login failed."
+                    )
+                }
             } else {
                 errorMessage = mapErrorMessage(
-                    response.error ?? response.message
-                        ?? "Signup failed. Please try again.")
-                print("❌ Signup failed: \(errorMessage ?? "Unknown error")")  // ✅ Debug failure message
+                    response.error ?? response.message ?? "Signup failed. Please try again."
+                )
+                print("❌ Signup failed: \(errorMessage ?? "Unknown error")")
             }
-            var loginResponse = try await AuthService.shared.login(
-                            email: email, password: password)
-                        print("Login response: \(loginResponse)")
-                        
-                        // TODO: Temporary testing, remove:
-                        loginResponse.success = !(loginResponse.token?.isEmpty ?? true)
-                        
-            if loginResponse.success == true, let token = loginResponse.token {
-                AuthManager.shared.saveToken(token)
-                isAuthenticated = true
-                clearForm()
-            }
+
         } catch let networkError as NetworkError {
             errorMessage = networkError.localizedDescription
-            print("❌ Network error: \(errorMessage ?? "Unknown network error")")  // ✅ Debug network error
-
+            print("❌ Network error: \(errorMessage ?? "Unknown network error")")
         } catch {
-            errorMessage =
-                "An unexpected error occurred. Please try again later."
-            print("❌ Unexpected error: \(error.localizedDescription)")  // ✅ Debug unexpected errors
+            errorMessage = "An unexpected error occurred. Please try again later."
+            print("❌ Unexpected error: \(error.localizedDescription)")
         }
 
         isLoading = false
     }
+
+    // MARK: - Helpers
 
     private func clearForm() {
         name = ""
@@ -140,6 +140,7 @@ class SignupViewModel: ObservableObject {
         password = ""
         confirmPassword = ""
     }
+
     private func mapErrorMessage(_ error: String) -> String {
         switch error.lowercased() {
         case "email already exists":
@@ -157,14 +158,12 @@ class SignupViewModel: ObservableObject {
 
     private func isValidEmail(_ email: String) -> Bool {
         let emailRegex = #"^[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$"#
-        return NSPredicate(format: "SELF MATCHES %@", emailRegex).evaluate(
-            with: email)
+        return NSPredicate(format: "SELF MATCHES %@", emailRegex).evaluate(with: email)
     }
 
     private func isValidPassword(_ password: String) -> Bool {
         let passwordRegex =
-            #"^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$"#
-        return NSPredicate(format: "SELF MATCHES %@", passwordRegex).evaluate(
-            with: password)
+        #"^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$"#
+        return NSPredicate(format: "SELF MATCHES %@", passwordRegex).evaluate(with: password)
     }
 }
