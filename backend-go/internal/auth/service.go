@@ -3,7 +3,6 @@ package auth
 import (
 	"database/sql"
 	"errors"
-	"strings"
 
 	"github.com/krishnasah371/smartAttendanceApp/backend/pkg/security"
 	"github.com/rs/zerolog/log"
@@ -40,15 +39,15 @@ func AuthenticateUserService(email, password string) (string, *User, error) {
 //
 // It checks if the user already exists, ensures the role is valid, and securely hashes the password before saving.
 // If successful, the user is added to the database.
-func RegistgerUserService(name, email, password string) (*User, error) {
-	role := ""
-	if strings.HasSuffix(email, "my.fisk.edu") {
-		role = "student"
-	} else if strings.HasSuffix(email, "fisk.edu") {
-		role = "teacher"
-	} else {
-		role = "student"
-	}
+func RegistgerUserService(name, email, password, role string) (*User, error) {
+	// role := ""
+	// if strings.HasSuffix(email, "my.fisk.edu") {
+	// 	role = "student"
+	// } else if strings.HasSuffix(email, "fisk.edu") {
+	// 	role = "teacher"
+	// } else {
+	// 	role = "student"
+	// }
 
 	// Check if user already exists
 	existingUser, err := GetUserByEmail(email)

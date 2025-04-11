@@ -13,3 +13,9 @@ type UpdateAttendanceRequest struct {
 	Location any    `json:"location,omitempty"` // optional updated location
 	IsManual bool   `json:"is_manual"`          // must be true if manually edited
 }
+
+// StartBroadcastRequest is sent by the teacher to begin BLE attendance session
+type StartBroadcastRequest struct {
+	BluetoothID string `json:"bluetooth_id" binding:"required"`
+	Date        string `json:"date" binding:"required"` // Format: YYYY-MM-DD
+}

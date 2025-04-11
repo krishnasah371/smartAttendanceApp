@@ -76,7 +76,7 @@ func RegisterHandler(c *gin.Context) {
 		return
 	}
 
-	user, err := RegistgerUserService(req.Name, req.Email, req.Password)
+	user, err := RegistgerUserService(req.Name, req.Email, req.Password, req.Role)
 	if err != nil {
 		log.Error().Err(err).Msg("❌ Failed to register user")
 		c.JSON(http.StatusInternalServerError, gin.H{

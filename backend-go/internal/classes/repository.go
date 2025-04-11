@@ -8,34 +8,68 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// CreateClass inserts a new class into the database.
+// FetchAllPublicClasses retrieves all classes with teacher details from the database.
 //
-// It accepts the class name, schedule (as a JSON string), and the teacher ID who is creating the class.
-// Logs success or failure with relevant context.
+// Joins classes with users (teachers) and returns full class metadata.
+// This function is used by unauthenticated public endpoints.
+func FetchAllPublicClasses() ([]ClassResponse, error) {
+	query := `
+		SELECT c.id, c.name, c.schedule, c.teacher_id, u.name, u.email, 
+		       c.ble_id, c.timezone, c.start_date, c.end_date
+		FROM classes c
+		JOIN users u ON c.teacher_id = u.id
+	`
+
+	rows, err := database.DB.Query(query)
+	if err != nil {
+		log.Error().Err(err).Msg("❌ Failed to fetch all classes")
+		return nil, err
+	}
+	defer rows.Close()
+
+	var classes []ClassResponse
+	for rows.Next() {
+		var class ClassResponse
+		err := rows.Scan(
+			&class.ID,
+			&class.Name,
+			&class.Schedule,
+			&class.TeacherID,
+			&class.TeacherName,
+			&class.TeacherEmail,
+			&class.BLEID,
+			&class.TimeZone,
+			&class.StartDate,
+			&class.EndDate,
+		)
+		if err != nil {
+			log.Error().Err(err).Msg("❌ Failed to scan class row (public)")
+			continue
+		}
+		classes = append(classes, class)
+	}
+
+	return classes, nil
+}
+
+// InsertClass adds a new class record to the database.
 //
-// Returns an error if the insert fails.
-func CreateClass(name, schedule string, teacherID int, bleID, timeZone, startDate, endDate string) error {
+// Assumes all validation is already performed.
+func InsertClass(name, schedule string, teacherID int, bleID, timeZone, startDate, endDate string) error {
 	query := `
 		INSERT INTO classes (name, schedule, teacher_id, ble_id, timezone, start_date, end_date)
 		VALUES ($1, $2, $3, $4, $5, $6, $7)
 	`
 
-	_, err := database.DB.Exec(query, name, schedule, teacherID, bleID)
+	_, err := database.DB.Exec(query, name, schedule, teacherID, bleID, timeZone, startDate, endDate)
 	if err != nil {
 		log.Error().
 			Err(err).
-			Str("name", name).
-			Str("ble_id", bleID).
+			Str("class_name", name).
 			Int("teacher_id", teacherID).
-			Msg("❌ Failed to insert class into database")
+			Msg("❌ DB insert failed")
 		return err
 	}
-
-	log.Info().
-		Str("name", name).
-		Int("teacher_id", teacherID).
-		Str("ble_id", bleID).
-		Msg("✅ Class inserted successfully with BLE ID")
 
 	return nil
 }
@@ -61,7 +95,7 @@ func GetClassesByTeacherID(teacherID int) ([]ClassResponse, error) {
 	var classes []ClassResponse
 	for rows.Next() {
 		var class ClassResponse
-		if err := rows.Scan(&class.ID, &class.Name, &class.Schedule, &class.TeacherID, &class.BLEID, class.TimeZone, class.StartDate, class.EndDate); err != nil {
+		if err := rows.Scan(&class.ID, &class.Name, &class.Schedule, &class.TeacherID, &class.BLEID, &class.TimeZone, &class.StartDate, &class.EndDate); err != nil {
 			log.Error().Err(err).Msg("❌ Failed to scan class row (teacher)")
 			continue
 		}
@@ -362,4 +396,27 @@ func DoesTeacherOwnClass(teacherID, classID int) (bool, error) {
 	}
 
 	return count > 0, nil
+}
+
+// UpdateBLEID sets a new BLE ID for the given class.
+//
+// Returns error if the update fails.
+func UpdateBLEID(classID int, bleID string) error {
+	query := `UPDATE classes SET ble_id = $1 WHERE id = $2`
+
+	_, err := database.DB.Exec(query, bleID, classID)
+	if err != nil {
+		log.Error().
+			Err(err).
+			Int("class_id", classID).
+			Str("ble_id", bleID).
+			Msg("❌ Failed to update BLE ID")
+		return err
+	}
+
+	log.Info().
+		Int("class_id", classID).
+		Str("ble_id", bleID).
+		Msg("✅ BLE ID updated")
+	return nil
 }

@@ -12,7 +12,7 @@ func MigrateClasses() {
 		name 		VARCHAR(100) NOT NULL,
 		teacher_id 	INTEGER NOT NULL REFERENCES users(id),
 		schedule 	JSONB,
-		ble_id 		TEXT UNIQUE,
+		ble_id 		TEXT,
 		timezone 	TEXT NOT NULL,
 		start_date 	DATE NOT NULL,
 		end_date 	DATE NOT NULL,
