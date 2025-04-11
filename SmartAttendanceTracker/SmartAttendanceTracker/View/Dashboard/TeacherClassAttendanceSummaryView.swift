@@ -99,7 +99,3 @@ struct TeacherClassAttendanceSummaryView: View {
         return formatter.string(from: date)
     }
 }
-
-//#Preview {
-//    TeacherClassAttendanceSummaryView()
-//}
