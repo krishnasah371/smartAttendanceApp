@@ -1,1 +1,1 @@
-# smartAttenndanceApp
+# smartAttendanceApp
