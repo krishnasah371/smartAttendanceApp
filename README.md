@@ -42,6 +42,10 @@ Built with:
 ---
 
 ## 🛠️ System Architecture
+<p float="left">
+  <img src="mockups/architecture.png" alt="System Architecture" width="500"/>
+  <img src="mockups/schema.png" alt="Database Schema" width="500"/>
+</p>
 The system follows a **modular monolith** design with four main components:  
 
 1. **📱 iOS Mobile App (Swift)**  
@@ -110,7 +114,17 @@ The system follows a **modular monolith** design with four main components:
 ---
 
 ## 📷 Screenshots
-*(Add app UI and dashboard screenshots here)*  
+<p float="left">
+  <img src="mockups/ss1.png" alt="Attendance Started" width="350" style="margin-right:50px;"/>
+  <img src="mockups/ss2.png" alt="Attendance Recorded" width="350"/>
+</p>
+<p float="left">
+  <img src="mockups/ss3.png" alt="Register Class" width="350" style="margin-right:50px;"/>
+  <img src="mockups/ss4.png" alt="Teacher Dashboard" width="350"/>
+</p>
+<p float="left">
+  <img src="mockups/ss5.png" alt="Manual Attendance" width="350"/>
+</p>
 
 ---
 
