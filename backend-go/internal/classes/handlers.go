@@ -331,3 +331,30 @@ func UpdateBLEIDHandler(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "BLE ID updated successfully"})
 }
+
+// GetActiveClassByBLEHandler returns the class currently in session for a given beacon.
+// @Summary Get active class for a beacon
+// @Description Returns which class is currently active for the given BLE ID based on schedule and current time.
+
+func GetActiveClassByBLEHandler(c *gin.Context) {
+	// Step 1: Get the ble_id from the URL query parameter
+	// e.g. /classes/active-by-beacon?ble_id=BCPro_207342
+	bleID := c.Query("ble_id")
+	if bleID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "ble_id is required"})
+		return
+	}
+
+	log.Info().Str("ble_id", bleID).Msg("🔍 Looking up active class for beacon")
+
+	// Step 2: Call the service layer
+	class, err := GetActiveClassForBeacon(bleID)
+	if err != nil {
+		log.Warn().Str("ble_id", bleID).Msg("⚠️ No active class found for beacon")
+		c.JSON(http.StatusNotFound, gin.H{"error": "No active class found for this beacon right now"})
+		return
+	}
+
+	// Step 3: Return the class as JSON
+	c.JSON(http.StatusOK, gin.H{"class": class})
+}

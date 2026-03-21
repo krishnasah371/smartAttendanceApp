@@ -2,7 +2,9 @@ package classes
 
 import (
 	"database/sql"
+	"encoding/json"
 	"errors"
+	"strings"
 
 	"github.com/krishnasah371/smartAttendanceApp/backend/pkg/database"
 	"github.com/rs/zerolog/log"
@@ -421,4 +423,55 @@ func UpdateBLEID(classID int, bleID string) error {
 		Str("ble_id", bleID).
 		Msg("✅ BLE ID updated")
 	return nil
+}
+
+// FetchActiveClassByBLEID finds which class is currently in session for a given beacon.
+// It checks the current day and time against each class schedule.
+func FetchActiveClassByBLEID(bleID string, currentDay string, currentTime string) (*ClassResponse, error) {
+	query := `
+        SELECT c.id, c.name, c.schedule, c.teacher_id, u.name, u.email,
+               c.ble_id, c.timezone, c.start_date, c.end_date
+        FROM classes c
+        JOIN users u ON c.teacher_id = u.id
+        WHERE c.ble_id = $1
+    `
+
+	rows, err := database.DB.Query(query, bleID)
+	if err != nil {
+		log.Error().Err(err).Str("ble_id", bleID).Msg("❌ Failed to query classes by BLE ID")
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var class ClassResponse
+		err := rows.Scan(
+			&class.ID, &class.Name, &class.Schedule, &class.TeacherID,
+			&class.TeacherName, &class.TeacherEmail, &class.BLEID,
+			&class.TimeZone, &class.StartDate, &class.EndDate,
+		)
+		if err != nil {
+			continue
+		}
+
+		// Parse the schedule JSON string
+		// Schedule looks like: {"tuesday": "09:00-10:30"}
+		var schedule map[string]string
+		if err := json.Unmarshal([]byte(class.Schedule), &schedule); err != nil {
+			continue
+		}
+
+		// Check if current day has a slot and if current time falls within it
+		if slot, ok := schedule[currentDay]; ok {
+			parts := strings.Split(slot, "-")
+			if len(parts) == 2 {
+				if currentTime >= parts[0] && currentTime <= parts[1] {
+					log.Info().Str("ble_id", bleID).Str("class_name", class.Name).Msg("✅ Active class found for beacon")
+					return &class, nil
+				}
+			}
+		}
+	}
+
+	return nil, errors.New("no active class found for this beacon at current time")
 }

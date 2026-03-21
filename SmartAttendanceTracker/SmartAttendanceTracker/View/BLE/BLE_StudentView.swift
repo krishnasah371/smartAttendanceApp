@@ -164,16 +164,41 @@ struct BLE_StudentView: View {
         
         timer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { t in
             // ✅ Your repeating task here
-            if bleManager.isScanning {
-                if bleManager.discoveredDevices.count > 0 {
-                    for device in bleManager.discoveredDevices {
-                        
-                     if device.id == "EDB2D681-23BB-4EBA-69E7-F11063BC4664" {
-                            bannerColor = .green
-                            bannerMessage = "Congrats! Attendance Recorded!!! "
+            if bleManager.discoveredDevices.count > 0 {
+                for device in bleManager.discoveredDevices {
+                    
+                    // triggers actual beacons
+                    let knownBeaconNames = ["Senior Seminar", "LIB317 - Senior Seminar"]
+                    if knownBeaconNames.contains(device.name) {
+                        Task {
+                            do {
+                                // Ask backend which class is active for this beacon RIGHT NOW
+                                let response: ActiveClassResponse = try await APIClient.shared.request(
+                                    .getActiveClassForBeacon(bleId: device.name == "Senior Seminar" ? "BCPro_207342" : device.name)
+                                )
+                                if let activeClass = response.classInfo {
+                                    // Mark attendance for that class
+                                    _ = try await AttendenceService.shared.updateStudentAttendence(
+                                        classId: activeClass.id,
+                                        studentId: user.id,
+                                        state: "present"
+                                    )
+                                    await MainActor.run {
+                                        markCheckedIn(classId: activeClass.id)
+                                        timer?.invalidate()
+                                        bannerColor = .green
+                                        bannerMessage = "✅ Attendance recorded for \(activeClass.name)!"
+                                    }
+                                }
+                            } catch {
+                                await MainActor.run {
+                                    bannerColor = .red
+                                    bannerMessage = "❌ Could not record attendance."
+                                }
+                            }
                         }
-                        print(device)
                     }
+                    print(device)
                 }
             }
             

@@ -2,7 +2,7 @@ import Foundation
 
 class APIClient {
     static let shared = APIClient()
-    private let baseURL = "http://172.20.10.1:3000/api"
+    private let baseURL = "http://192.168.1.67:3000/api"
 
     private init() {}
 
@@ -21,11 +21,7 @@ class APIClient {
         if endpoint.requiresAuth {
             if let token = AuthManager.shared.getToken() {
                 print("🔐 Attaching token to request")
-                if endpoint.method == "GET" {
-                    request.setValue("Bearer \(token)", forHTTPHeaderField: "X-Authorization")
-                    request.setValue("true", forHTTPHeaderField: "isIOS")
-                }
-
+                request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
             } else {
                 print("❌ Token missing for authenticated request")
             }

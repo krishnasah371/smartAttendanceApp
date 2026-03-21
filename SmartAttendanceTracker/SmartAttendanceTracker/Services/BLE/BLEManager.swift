@@ -16,6 +16,7 @@ class BLEManager: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeriph
     // Whitelist of known devices
     private let knownDevices: [String: String] = [
         "BlueCharm_199298": "LIB317 - Senior Seminar",
+        "BCPro_207342": "Senior Seminar",
         "EDB2D681-23BB-4EBA-69E7-F11063BC4664": "KnownDevice1"
     ]
 

@@ -2,6 +2,8 @@ package classes
 
 import (
 	"errors"
+	"strings"
+	"time"
 
 	"github.com/rs/zerolog/log"
 )
@@ -199,4 +201,24 @@ func UpdateClassBLEID(teacherID, classID int, newBLEID string) error {
 	}
 
 	return UpdateBLEID(classID, newBLEID)
+}
+
+// GetActiveClassForBeacon finds which class is currently in session for a beacon.
+// It gets the current day/time and delegates to the repository layer.
+func GetActiveClassForBeacon(bleID string) (*ClassResponse, error) {
+	now := time.Now()
+
+	// Get current day as lowercase string e.g. "tuesday"
+	currentDay := strings.ToLower(now.Format("Monday"))
+
+	// Get current time as HH:MM string e.g. "09:30"
+	currentTime := now.Format("15:04")
+
+	log.Info().
+		Str("ble_id", bleID).
+		Str("day", currentDay).
+		Str("time", currentTime).
+		Msg("🔍 Looking for active class for beacon")
+
+	return FetchActiveClassByBLEID(bleID, currentDay, currentTime)
 }

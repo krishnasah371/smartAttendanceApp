@@ -25,6 +25,7 @@ func RegisterRoutes(router *gin.RouterGroup) {
 	classGroup.Use(middleware.AuthMiddleware())
 	{
 		fmt.Printf("reached here")
+		classGroup.GET("/active-by-beacon", GetActiveClassByBLEHandler)
 		classGroup.POST("/register", CreateClassHandler)
 		classGroup.GET("/", GetClassesHandler)
 		classGroup.GET("/:id", GetClassDetailHandler)

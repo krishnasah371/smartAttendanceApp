@@ -215,6 +215,15 @@ func getScheduleSummary(from classSchedule: ClassSchedule) -> String {
 }
 
 
+//unwraps classes from the backend and gives us the class inside as a classModel to use
 struct ClassesResponse: Codable {
     let classes: [ClassModel]?
+}
+
+struct ActiveClassResponse: Codable {
+    let classInfo: ClassModel?
+    
+    enum CodingKeys: String, CodingKey {
+        case classInfo = "class"
+    }
 }
