@@ -45,7 +45,7 @@ class AttendanceViewModel: ObservableObject {
               let attendenceForDate = try await AttendenceService.shared.getAllAttendence(classId: classId, date: date) ?? []
               for each in attendenceForDate {
                   if each.status == "present" {
-                      presentStudentIds.insert(each.userid)
+                      presentStudentIds.insert(each.studentId)
                   }
               }
               self.studentsInClass  = try await AttendenceService.shared.getStudentsForClass(classId: classId) ?? []
@@ -60,7 +60,7 @@ class AttendanceViewModel: ObservableObject {
             let attendenceForDate = try await AttendenceService.shared.getAllAttendence(classId: classId, date: date) ?? []
             for each in attendenceForDate {
                 if each.status == "present" {
-                    presentStudentIds.insert(each.userid)
+                    presentStudentIds.insert(each.studentId)
                 }
             }
             self.studentsInClass  = try await AttendenceService.shared.getStudentsForClass(classId: classId) ?? []
@@ -71,24 +71,33 @@ class AttendanceViewModel: ObservableObject {
     }
          
     func save() {
-        // TODO: Save in server after edit
-        func fetchAllClassesView() async {
+        Task {
             do {
                 for student in studentsInClass {
                     if presentStudentIds.contains(student.id) {
-                        let fetched = try await AttendenceService.shared.updateStudentAttendence(classId: classId, studentId: student.id, state: "present")
-                    } else{
-                        let fetched = try await AttendenceService.shared.updateStudentAttendence(classId: classId, studentId: student.id, state: "absent")
+                        _ = try await AttendenceService.shared.updateStudentAttendence(
+                            classId: classId,
+                            studentId: student.id,
+                            state: "present"
+                        )
+                    } else {
+                        _ = try await AttendenceService.shared.updateStudentAttendence(
+                            classId: classId,
+                            studentId: student.id,
+                            state: "absent"
+                        )
                     }
                 }
+                print("✅ Attendance saved successfully")
             } catch let error as NetworkError {
                 self.fetchError = error.localizedDescription
+                print("❌ Save failed: \(error.localizedDescription)")
             } catch {
                 self.fetchError = error.localizedDescription
+                print("❌ Save failed: \(error.localizedDescription)")
             }
         }
     }
-    
 
     private func formatted(_ date: Date) -> String {
         let formatter = DateFormatter()

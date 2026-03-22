@@ -2,7 +2,7 @@
 //  TeacherClassAttendanceSummaryView.swift
 //  SmartAttendanceTracker
 //
-//  Created by Bipul Aryal on 4/9/25.
+//  Created by Krishna Sah Kanu on 4/9/25.
 //
 
 import SwiftUI
@@ -11,21 +11,28 @@ struct TeacherClassAttendanceSummaryView: View {
     let classId: Int
     let className: String
 
+    // Controls which tab is shown: Class Records or Student Records
     @State private var showStudentView = false
-    @State private var attendanceRecordsByDate: [Date: [String]] = [Date():["alice@school.com", "Shyam@gmail.com"]] // [date: presentEmails]
+    
+    // List of dates when this class had attendance sessions
+    @State private var attendanceDates: [Date] = []
+    
+    // Controls navigation to the detailed attendance view
     @State private var isAttendanceViewActive = false
+    
+    // The date the teacher tapped on
     @State private var selectedDate: Date?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            // Header + Toggle
+            
+            // Header row: class name on left, tab picker on right
             HStack {
                 Text("📖 \(className)")
                     .font(.title2)
                     .fontWeight(.bold)
-
                 Spacer()
-
+                // Toggle between Class Records and Student Records tabs
                 Picker("View", selection: $showStudentView) {
                     Text("Class Records").tag(false)
                     Text("Student Records").tag(true)
@@ -36,32 +43,37 @@ struct TeacherClassAttendanceSummaryView: View {
 
             Divider()
 
-            // Class Records View
+            // CLASS RECORDS TAB — shows list of dates with attendance
             if !showStudentView {
                 Text("📅 Class Sessions")
                     .font(.headline)
 
-                ForEach(attendanceRecordsByDate.keys.sorted(by: >), id: \.self) { date in
-                    Button {
-                        selectedDate = date
-                        isAttendanceViewActive = true
-                    } label: {
-                        HStack {
-                            Text(formatted(date))
-                            Spacer()
-                            let presentCount = attendanceRecordsByDate[date]?.count ?? 0
-                            //TODO: Data will be given by backend
-//                            Text("\(presentCount)/\(students.count) Present")
-//                                .font(.subheadline)
-//                                .foregroundColor(.gray)
+                if attendanceDates.isEmpty {
+                    // Show empty state when no sessions recorded yet
+                    Text("No sessions recorded yet.")
+                        .foregroundColor(.gray)
+                } else {
+                    // Each date is a tappable button that opens the attendance detail
+                    ForEach(attendanceDates, id: \.self) { date in
+                        Button {
+                            // Store selected date and trigger navigation
+                            selectedDate = date
+                            isAttendanceViewActive = true
+                        } label: {
+                            HStack {
+                                Text(formatted(date))
+                                Spacer()
+                                Image(systemName: "chevron.right")
+                                    .foregroundColor(.gray)
+                            }
+                            .padding()
+                            .background(Color.gray.opacity(0.08))
+                            .cornerRadius(10)
                         }
-                        .padding()
-                        .background(Color.gray.opacity(0.08))
-                        .cornerRadius(10)
                     }
                 }
             } else {
-                // Placeholder for Student Records
+                // STUDENT RECORDS TAB — coming in next phase
                 Text("👨‍🎓 Student Records coming soon...")
                     .foregroundColor(.gray)
                     .padding(.top, 20)
@@ -70,12 +82,26 @@ struct TeacherClassAttendanceSummaryView: View {
             Spacer()
         }
         .padding()
+        // Load attendance dates when this view appears
+        .onAppear {
+            loadAttendanceDates()
+        }
+        // Navigate to AttendanceViewForDate when a date is tapped
         .navigationDestination(isPresented: $isAttendanceViewActive) {
             if let date = selectedDate {
+                // Pass the selected date and class ID to the detail view
+                AttendanceViewForDate(classId: classId, date: date)
             }
         }
     }
 
+    // Loads the list of dates that had attendance sessions
+    // Currently uses today — TODO: fetch all unique dates from backend
+    func loadAttendanceDates() {
+        attendanceDates = [Date()]
+    }
+
+    // Formats a Date object into a readable string like "Mar 21, 2026"
     func formatted(_ date: Date) -> String {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium

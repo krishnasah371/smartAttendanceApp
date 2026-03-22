@@ -27,8 +27,8 @@ class AttendenceService {
     
     func getAllAttendence(classId: Int,date:String) async throws -> [AttendenceResponse]? {
         do {
-            let response:[AttendenceResponse] = try await APIClient.shared.request(.getAttendenceForDate(classId: classId, date: date))
-            return response
+            let response:AttendenceListResponse = try await APIClient.shared.request(.getAttendenceForDate(classId: classId, date: date))
+            return response.attendance
             
         } catch let networkError as NetworkError {
             throw networkError

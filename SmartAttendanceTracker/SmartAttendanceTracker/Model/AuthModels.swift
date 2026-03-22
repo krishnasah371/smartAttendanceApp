@@ -58,8 +58,28 @@ struct SuccessResponse: Codable {
     let message: String?
 }
 
-struct AttendenceResponse: Codable{
-    let userid: Int
-    let date: String
+struct AttendenceResponse: Codable {
+    let id: Int
+    let studentId: Int
+    let studentName: String
+    let classId: Int
+    let className: String
     let status: String
+    let timestamp: String
+    let isManual: Bool
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case studentId = "student_id"
+        case studentName = "student_name"
+        case classId = "class_id"
+        case className = "class_name"
+        case status
+        case timestamp
+        case isManual = "is_manual"
+    }
+}
+
+struct AttendenceListResponse: Codable {
+    let attendance: [AttendenceResponse]?
 }
