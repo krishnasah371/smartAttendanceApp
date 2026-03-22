@@ -289,3 +289,62 @@ func GetCurrentBLEIDHandler(c *gin.Context) {
 	bleID := getSession(classID, date)
 	c.JSON(http.StatusOK, gin.H{"bluetooth_id": bleID})
 }
+
+// GetMyAttendanceHandler returns the current student's own attendance for a class.
+// Students can only see their own records — not other students' data.
+func GetMyAttendanceHandler(c *gin.Context) {
+	// Get class ID from URL path e.g. /classes/1/attendance/me
+	classID, err := strconv.Atoi(c.Param("id"))
+	if err != nil || classID <= 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid class ID"})
+		return
+	}
+
+	// Get the logged-in student's ID from JWT token
+	userID := c.GetInt("user_id")
+	role := c.GetString("role")
+
+	// Only students can use this endpoint
+	if role != "student" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Only students can view their own attendance"})
+		return
+	}
+
+	// Fetch this student's attendance for this class
+	records, err := GetStudentAttendance(userID, &classID, nil)
+	if err != nil {
+		log.Error().Err(err).Msg("❌ Failed to fetch student attendance")
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch attendance"})
+		return
+	}
+
+	// Calculate attendance percentage
+	// total = all records, present = records with status "present"
+	total := len(records)
+	present := 0
+	for _, r := range records {
+		if r.Status == "present" {
+			present++
+		}
+	}
+
+	percentage := 0
+	if total > 0 {
+		percentage = (present * 100) / total
+	}
+
+	log.Info().
+		Int("student_id", userID).
+		Int("class_id", classID).
+		Int("total", total).
+		Int("present", present).
+		Int("percentage", percentage).
+		Msg("✅ Student attendance fetched")
+
+	c.JSON(http.StatusOK, gin.H{
+		"attendance": records,
+		"total":      total,
+		"present":    present,
+		"percentage": percentage,
+	})
+}

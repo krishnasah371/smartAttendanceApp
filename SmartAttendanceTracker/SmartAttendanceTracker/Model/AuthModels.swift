@@ -83,3 +83,29 @@ struct AttendenceResponse: Codable {
 struct AttendenceListResponse: Codable {
     let attendance: [AttendenceResponse]?
 }
+
+struct MyAttendanceResponse: Codable {
+    let attendance: [MyAttendanceRecord]?
+    let total: Int
+    let present: Int
+    let percentage: Int
+}
+
+
+struct MyAttendanceRecord: Codable {
+    let id: Int
+    let classId: Int
+    let className: String
+    let status: String
+    let timestamp: String
+    let isManual: Bool
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case classId = "class_id"
+        case className = "class_name"
+        case status
+        case timestamp
+        case isManual = "is_manual"
+    }
+}

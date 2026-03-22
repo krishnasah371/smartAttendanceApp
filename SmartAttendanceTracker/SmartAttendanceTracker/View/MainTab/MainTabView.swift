@@ -62,8 +62,25 @@ struct MainTabView: View {
     private func fetchUserClasses() async {
         do {
             let fetched = try await ClassService.shared.fetchEnrolledClasses()
-            self.classes = fetched ?? []
-//            self.fetchError = nil
+            var loadedClasses = fetched ?? []
+            
+            // For student role — fetch attendance percentage for each class
+            if let user = AuthManager.shared.getUser(), user.role == .student {
+                for i in 0..<loadedClasses.count {
+                    do {
+                        let attendanceData = try await AttendenceService.shared.getMyAttendance(
+                            classId: loadedClasses[i].id
+                        )
+                        // Update the attendance percentage on the class
+                        loadedClasses[i].attendancePercentage = attendanceData.percentage
+                    } catch {
+                        // If fetch fails for one class, just leave it at 0%
+                        print("⚠️ Could not fetch attendance for class \(loadedClasses[i].id)")
+                    }
+                }
+            }
+            
+            self.classes = loadedClasses
         } catch let error as NetworkError {
             self.fetchError = error.localizedDescription
             self.classes = []
@@ -72,7 +89,7 @@ struct MainTabView: View {
                 print("🚪 Unauthorized: Logging out")
                 AuthManager.shared.removeToken()
                 sessionManager.isLoggedIn = false
-                dismiss() // Automatically returns to login view if root is protected
+                dismiss()
             }
         } catch {
             self.fetchError = error.localizedDescription

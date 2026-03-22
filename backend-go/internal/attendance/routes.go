@@ -20,12 +20,13 @@ func RegisterRoutes(router *gin.RouterGroup) {
 	{
 		attendanceGroup.POST("/mark", MarkAttendanceHandler)
 		attendanceGroup.PUT("/:attendance_id", UpdateAttendanceHandler)
-		
+
 		attendanceGroup.GET("", GetClassAttendanceHandler)
 		attendanceGroup.GET("/by-date", GetAttendanceForDateHandler)
 		attendanceGroup.GET("/previous", GetPreviousAttendanceHandler)
 
 		attendanceGroup.POST("/start", StartAttendanceBroadcastHandler)
+		attendanceGroup.GET("/me", GetMyAttendanceHandler)
 	}
 
 	log.Info().Msg("✅ Attendance module initialized!")
