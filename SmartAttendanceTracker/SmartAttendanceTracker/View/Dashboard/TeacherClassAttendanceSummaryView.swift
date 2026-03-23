@@ -22,6 +22,12 @@ struct TeacherClassAttendanceSummaryView: View {
     
     // The date the teacher tapped on
     @State private var selectedDate: Date?
+    
+    // List of students enrolled in this class
+    @State private var enrolledStudents: [StudentInClassModel] = []
+
+    // Maps student ID to their attendance percentage
+    @State private var studentPercentages: [Int: Int] = [:]
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -73,18 +79,56 @@ struct TeacherClassAttendanceSummaryView: View {
                     }
                 }
             } else {
-                // STUDENT RECORDS TAB — coming in next phase
-                Text("👨‍🎓 Student Records coming soon...")
-                    .foregroundColor(.gray)
-                    .padding(.top, 20)
+                // STUDENT RECORDS TAB — shows each student's attendance percentage
+                Text("👨‍🎓 Student Attendance")
+                    .font(.headline)
+                
+                if enrolledStudents.isEmpty {
+                    Text("No students enrolled yet.")
+                        .foregroundColor(.gray)
+                        .padding(.top, 20)
+                } else {
+                    ScrollView {
+                        VStack(spacing: 12) {
+                            ForEach(enrolledStudents) { student in
+                                HStack {
+                                    // Student info on the left
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text(student.name)
+                                            .font(.headline)
+                                        Text(student.email)
+                                            .font(.caption)
+                                            .foregroundColor(.gray)
+                                    }
+                                    
+                                    Spacer()
+                                    
+                                    // Attendance percentage on the right
+                                    let pct = studentPercentages[student.id] ?? 0
+                                    VStack {
+                                        Text("\(pct)%")
+                                            .font(.title3)
+                                            .fontWeight(.bold)
+                                            .foregroundColor(pct >= 75 ? .green : .red)
+                                        Text("attended")
+                                            .font(.caption)
+                                            .foregroundColor(.gray)
+                                    }
+                                }
+                                .padding()
+                                .background(Color.gray.opacity(0.05))
+                                .cornerRadius(10)
+                            }
+                        }
+                    }
+                }
             }
-
             Spacer()
         }
         .padding()
         // Load attendance dates when this view appears
         .onAppear {
-            loadAttendanceDates()
+            loadData()
         }
         // Navigate to AttendanceViewForDate when a date is tapped
         .navigationDestination(isPresented: $isAttendanceViewActive) {
@@ -97,13 +141,15 @@ struct TeacherClassAttendanceSummaryView: View {
 
     // Loads the list of dates that had attendance sessions
     // Currently uses today — TODO: fetch all unique dates from backend
-    func loadAttendanceDates() {
+    func loadData() {
         Task {
             do {
+                // Fetch attendance records and students simultaneously
                 let response = try await AttendenceService.shared.getClassAttendance(classId: classId)
+                let students = try await AttendenceService.shared.getStudentsForClass(classId: classId) ?? []
                 let records = response.attendance ?? []
                 
-                // Extract unique dates from attendance records
+                // Extract unique dates for Class Records tab
                 let formatter = ISO8601DateFormatter()
                 formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
                 
@@ -111,7 +157,7 @@ struct TeacherClassAttendanceSummaryView: View {
                 var uniqueDates: [Date] = []
                 
                 for record in records {
-                    let dateOnly = String(record.timestamp.prefix(10)) // "2026-03-21"
+                    let dateOnly = String(record.timestamp.prefix(10))
                     if !seen.contains(dateOnly) {
                         seen.insert(dateOnly)
                         if let date = formatter.date(from: record.timestamp) {
@@ -120,15 +166,35 @@ struct TeacherClassAttendanceSummaryView: View {
                     }
                 }
                 
+                // Calculate attendance percentage for each student
+                // total sessions = number of unique dates
+                let totalSessions = seen.count
+                var percentages: [Int: Int] = [:]
+                
+                for student in students {
+                    // Count how many times this student was present
+                    let presentCount = records.filter {
+                        $0.studentId == student.id && $0.status == "present"
+                    }.count
+                    
+                    // Calculate percentage
+                    if totalSessions > 0 {
+                        percentages[student.id] = (presentCount * 100) / totalSessions
+                    } else {
+                        percentages[student.id] = 0
+                    }
+                }
+                
                 await MainActor.run {
                     self.attendanceDates = uniqueDates.sorted(by: >)
+                    self.enrolledStudents = students
+                    self.studentPercentages = percentages
                 }
             } catch {
-                print("❌ Failed to load attendance dates: \(error)")
+                print("❌ Failed to load data: \(error)")
             }
         }
     }
-
     // Formats a Date object into a readable string like "Mar 21, 2026"
     func formatted(_ date: Date) -> String {
         let formatter = DateFormatter()
