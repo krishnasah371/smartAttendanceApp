@@ -194,6 +194,22 @@ func getNextClassTime(for schedule: ClassSchedule, timeZone: TimeZone) -> String
     return nil
 }
 
+// Converts "1100" to "11:00" or "1100-1230" to "11:00-12:30"
+func formatTimeSlot(_ slot: String) -> String {
+    let parts = slot.components(separatedBy: "-")
+    let formatted = parts.map { time -> String in
+        // Already has colon — return as is
+        if time.contains(":") { return time }
+        // Pad to 4 digits if needed
+        let padded = time.count == 3 ? "0\(time)" : time
+        guard padded.count == 4 else { return time }
+        let hours = String(padded.prefix(2))
+        let minutes = String(padded.suffix(2))
+        return "\(hours):\(minutes)"
+    }
+    return formatted.joined(separator: "-")
+}
+
 func getScheduleSummary(from classSchedule: ClassSchedule) -> String {
     let dayOrder = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
     let dayShortNames: [String: String] = [
@@ -207,7 +223,7 @@ func getScheduleSummary(from classSchedule: ClassSchedule) -> String {
         guard let timeSlots = classSchedule.days[day], !timeSlots.isEmpty else { continue }
         
         let shortDay = dayShortNames[day] ?? day
-        let line = "\(shortDay): \(timeSlots.joined(separator: ", "))"
+        let line = "\(shortDay): \(timeSlots.map { formatTimeSlot($0) }.joined(separator: ", "))"
         summaryLines.append(line)
     }
 

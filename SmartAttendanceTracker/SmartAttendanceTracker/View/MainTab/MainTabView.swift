@@ -80,6 +80,29 @@ struct MainTabView: View {
                 }
             }
             
+            // For teacher role — calculate class average attendance for each class
+            if let user = AuthManager.shared.getUser(), user.role == .teacher {
+                for i in 0..<loadedClasses.count {
+                    do {
+                        // Fetch all attendance records for this class
+                        let response = try await AttendenceService.shared.getClassAttendance(
+                            classId: loadedClasses[i].id
+                        )
+                        let records = response.attendance ?? []
+                        
+                        // Calculate average: present records / total records
+                        let total = records.count
+                        let present = records.filter { $0.status == "present" }.count
+                        
+                        if total > 0 {
+                            loadedClasses[i].attendancePercentage = (present * 100) / total
+                        }
+                    } catch {
+                        print("⚠️ Could not fetch attendance for class \(loadedClasses[i].id)")
+                    }
+                }
+            }
+            
             self.classes = loadedClasses
         } catch let error as NetworkError {
             self.fetchError = error.localizedDescription
