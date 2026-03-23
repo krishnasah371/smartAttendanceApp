@@ -41,10 +41,17 @@ struct ClassesSummaryView: View {
                                 .font(.subheadline)
                                 .foregroundColor(.primaryColorDarker)
                             
+                        if userRole == .teacher && classInfo.attendancePercentage == 0 {
+                            Text("No data yet")
+                                .font(.headline)
+                                .fontWeight(.bold)
+                                .foregroundColor(.gray)
+                        } else {
                             Text("\(classInfo.attendancePercentage)%")
                                 .font(.headline)
                                 .fontWeight(.bold)
                                 .foregroundColor(.primaryColorDarker)
+                        }
                         
                         if let next = getNextClassTime(
                             for: classInfo.schedule,

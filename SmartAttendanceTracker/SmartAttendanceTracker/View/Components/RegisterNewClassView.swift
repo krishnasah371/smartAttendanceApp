@@ -241,7 +241,7 @@ struct RegisterNewClassView: View {
             var scheduleDict: [String:[String]] = [:]
             for entry in scheduleEntries {
                 let timeFormatter = DateFormatter()
-                timeFormatter.dateFormat = "HHmm" // 24-hour format
+                timeFormatter.dateFormat = "HH:mm" // 24-hour format
                 timeFormatter.timeZone = selectedTimeZone // use user-selected timezone
                 timeFormatter.locale = Locale(identifier: "en_US_POSIX")
                 let start = timeFormatter.string(from: entry.startTime) // e.g., "0930"

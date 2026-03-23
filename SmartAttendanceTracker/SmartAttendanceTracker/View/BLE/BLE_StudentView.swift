@@ -189,6 +189,11 @@ struct BLE_StudentView: View {
                                         bannerColor = .green
                                         bannerMessage = "✅ Attendance recorded for \(activeClass.name)!"
                                     }
+                                    // Wait 1 second then refresh dashboard
+                                    try? await Task.sleep(nanoseconds: 1_000_000_000)
+                                    await MainActor.run {
+                                        updateClassStatus()
+                                    }
                                 }
                             } catch {
                                 await MainActor.run {

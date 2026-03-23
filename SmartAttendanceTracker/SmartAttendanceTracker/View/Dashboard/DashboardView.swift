@@ -38,7 +38,9 @@ struct DashboardView: View {
                     .frame(maxWidth: .infinity)
                     .padding(.top)
                         
-                    Text("📊 Total Attendance So Far: \(totalAttendance)%")
+                    Text(user.role == .teacher
+                        ? "📊 Average Class Attendance: \(totalAttendance)%"
+                        : "📊 My Overall Attendance: \(totalAttendance)%")
                         .font(.headline)
                         .foregroundColor(.primaryColorDarker)
                     
@@ -85,13 +87,17 @@ struct DashboardView: View {
                         RegisterNewClassView( onRegister: {
                             // TODO: Handle Register
                             showRegisterOrJoinClassPage = false
-//                            updateClassStatus()
+                            updateClassStatus() //refresh class list
                         })
                         
                     } else {
                         EnrollInAClassView(availableClasses: classes, enrolledClassIDs:Set(classes.map(\.id)), didEnrollInClass: updateClassStatus)
                     }
                 }
+            }
+            .refreshable {
+                //pull down to refresh classes and attendance data
+                updateClassStatus()
             }
             .background(Color.white)
             
