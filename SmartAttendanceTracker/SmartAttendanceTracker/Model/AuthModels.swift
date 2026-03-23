@@ -109,3 +109,15 @@ struct MyAttendanceRecord: Codable {
         case isManual = "is_manual"
     }
 }
+
+struct UpdateAttendanceBody: Codable {
+    let status: String
+    let isManual: Bool
+    
+    enum CodingKeys: String, CodingKey {
+        case status
+        case isManual = "is_manual"
+    }
+}
+
+

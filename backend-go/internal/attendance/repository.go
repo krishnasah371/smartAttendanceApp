@@ -169,6 +169,9 @@ func UpdateAttendanceRecord(attendanceID int, status string, location any, isMan
 			log.Error().Err(err).Msg("❌ Failed to marshal updated location")
 			return err
 		}
+	} else {
+		// Default to empty JSON object when no location provided
+		locationJSON = []byte("{}")
 	}
 
 	_, err = database.DB.Exec(query, status, locationJSON, isManual, attendanceID)

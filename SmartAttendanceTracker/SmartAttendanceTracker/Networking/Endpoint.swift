@@ -14,6 +14,8 @@ enum Endpoint {
     case getStudentsForClass(classId: Int)
     case getActiveClassForBeacon(bleId: String)
     case getMyAttendance(classId: Int)
+    case getClassAttendance(classId: Int)
+    case updateAttendanceRecord(classId: Int, attendanceId: Int)
     
 
 
@@ -32,20 +34,24 @@ enum Endpoint {
         case .getStudentsForClass(let classId): return "/classes/\(classId)/students"
         case .getActiveClassForBeacon(let bleId): return "/classes/active-by-beacon?ble_id=\(bleId)"
         case .getMyAttendance(let classId): return "/classes/\(classId)/attendance/me"
+        case .getClassAttendance(let classId): return "/classes/\(classId)/attendance"
+        case .updateAttendanceRecord(let classId, let attendanceId):
+            return "/classes/\(classId)/attendance/\(attendanceId)"
         }
     }
 
     var method: String {
         switch self {
         case .login, .signup,.enrollInAClass,.registerInAClass: return "POST"
-        case .getClasses,.getAllClasses,.getAttendenceForDate,.getStudentsForClass,.updateBLE, .getUser, .getActiveClassForBeacon, .getMyAttendance: return "GET"
+        case .getClasses,.getAllClasses,.getAttendenceForDate,.getStudentsForClass,.updateBLE, .getUser, .getActiveClassForBeacon, .getMyAttendance, .getClassAttendance: return "GET"
         case .updateAttendence: return "POST"
+        case .updateAttendanceRecord: return "PUT"
         }
     }
 
     var requiresAuth: Bool {
         switch self {
-        case .getClasses,.enrollInAClass,.registerInAClass,.getUser, .getActiveClassForBeacon, .getAttendenceForDate, .getStudentsForClass, .getMyAttendance:
+        case .getClasses,.enrollInAClass,.registerInAClass,.getUser, .getActiveClassForBeacon, .getAttendenceForDate, .getStudentsForClass, .getMyAttendance, .getClassAttendance, .updateAttendanceRecord:
             return true
         default:
             return false

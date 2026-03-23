@@ -61,6 +61,18 @@ class AttendenceService {
             throw NetworkError.serverError("Failed to fetch your attendance.")
         }
     }
+    func getClassAttendance(classId: Int) async throws -> AttendenceListResponse {
+        do {
+            let response: AttendenceListResponse = try await APIClient.shared.request(
+                .getClassAttendance(classId: classId)
+            )
+            return response
+        } catch let networkError as NetworkError {
+            throw networkError
+        } catch {
+            throw NetworkError.serverError("Failed to fetch class attendance.")
+        }
+    }
     
 //    func setStudentAttendence() async throws -> [ClassModel]? {
 //        do {

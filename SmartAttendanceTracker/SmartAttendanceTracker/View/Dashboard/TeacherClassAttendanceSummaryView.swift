@@ -98,7 +98,35 @@ struct TeacherClassAttendanceSummaryView: View {
     // Loads the list of dates that had attendance sessions
     // Currently uses today — TODO: fetch all unique dates from backend
     func loadAttendanceDates() {
-        attendanceDates = [Date()]
+        Task {
+            do {
+                let response = try await AttendenceService.shared.getClassAttendance(classId: classId)
+                let records = response.attendance ?? []
+                
+                // Extract unique dates from attendance records
+                let formatter = ISO8601DateFormatter()
+                formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+                
+                var seen = Set<String>()
+                var uniqueDates: [Date] = []
+                
+                for record in records {
+                    let dateOnly = String(record.timestamp.prefix(10)) // "2026-03-21"
+                    if !seen.contains(dateOnly) {
+                        seen.insert(dateOnly)
+                        if let date = formatter.date(from: record.timestamp) {
+                            uniqueDates.append(date)
+                        }
+                    }
+                }
+                
+                await MainActor.run {
+                    self.attendanceDates = uniqueDates.sorted(by: >)
+                }
+            } catch {
+                print("❌ Failed to load attendance dates: \(error)")
+            }
+        }
     }
 
     // Formats a Date object into a readable string like "Mar 21, 2026"
