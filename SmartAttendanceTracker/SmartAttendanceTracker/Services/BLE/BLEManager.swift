@@ -75,6 +75,7 @@ class BLEManager: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeriph
             if !self.discoveredDevices.contains(where: { $0.id == "\(peripheral.identifier)"}) {
                 let newDevice = BLEDevice(
                     id: "\(peripheral.identifier)", name: displayName,
+                    hardwareId: deviceName, //original hardware name
                     peripheral: peripheral, rssi: RSSI.intValue
                 )
                 self.discoveredDevices.append(newDevice)

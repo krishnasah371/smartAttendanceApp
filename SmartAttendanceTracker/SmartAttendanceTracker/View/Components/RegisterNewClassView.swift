@@ -211,7 +211,11 @@ struct RegisterNewClassView: View {
                         
                     }
                     if (selectedBeaconMode == .scan) {
-                        BLEScanView(bleManager: bleManager, onBeaconSelected: {_ in }, closeBluetoothSearch: closeBluetoothSearch )
+                        BLEScanView(bleManager: bleManager, onBeaconSelected: { device in
+                            // Store the selected beacon's name as the BLE ID
+                            beaconId = device.hardwareId
+                            print("✅ Beacon selected: \(device.name)")
+                        }, closeBluetoothSearch: closeBluetoothSearch)
                     }
                     
                 }
@@ -269,7 +273,7 @@ struct RegisterNewClassView: View {
             let payload = ClassRegistrationPayload(
                 name: className,
                 schedule: scheduleString,
-                ble_id: "beaconId",
+                ble_id: beaconId.isEmpty ? "unknown" : beaconId,
                 timezone: timeZone,
                 start_date: dateFormatter.string(from: startDate),
                 end_date: dateFormatter.string(from: endDate)
