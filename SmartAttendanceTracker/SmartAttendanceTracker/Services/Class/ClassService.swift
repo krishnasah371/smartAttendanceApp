@@ -66,4 +66,17 @@ class ClassService {
             throw NetworkError.serverError("An error occurred while fetching classes.")
         }
     }
+    
+    func unenrollFromClass(classId: Int) async throws -> SuccessResponse {
+        do {
+            let response: SuccessResponse = try await APIClient.shared.request(
+                .unenrollFromClass(classId: classId)
+            )
+            return response
+        } catch let networkError as NetworkError {
+            throw networkError
+        } catch {
+            throw NetworkError.serverError("Failed to unenroll from class.")
+        }
+    }
 }
