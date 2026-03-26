@@ -119,11 +119,11 @@ class AttendanceViewModel: ObservableObject {
                             body: body
                         ) as SuccessResponse
                     } else {
-                        _ = try await AttendenceService.shared.updateStudentAttendence(
-                            classId: classId,
-                            studentId: student.id,
-                            state: newStatus
-                        )
+                        // No existing attendance record for this student
+                            // They were never detected by beacon — they remain absent
+                            // Teachers can only modify existing records, not create new ones
+                            // (Creating new records requires beacon validation)
+                            print("ℹ️ No record for student \(student.id) — leaving as absent")
                     }
                 }
                 print("✅ Attendance saved successfully")

@@ -77,7 +77,7 @@ struct DashboardView: View {
                 .padding()
                 .navigationDestination(item: $selectedClass) { classModel in
                     if user.role == .teacher {
-                        TeacherClassAttendanceSummaryView(classId: classModel.id, className: classModel.name)
+                        TeacherClassAttendanceSummaryView(classId: classModel.id, className: classModel.name,  updateClassStatus: updateClassStatus)
                     } else {
                         StudentClassStatsView(classModel: classModel, updateClassStatus: updateClassStatus)
                     }

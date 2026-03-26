@@ -358,3 +358,34 @@ func GetActiveClassByBLEHandler(c *gin.Context) {
 	// Step 3: Return the class as JSON
 	c.JSON(http.StatusOK, gin.H{"class": class})
 }
+
+// DeleteClassHandler allows a teacher to delete a class they own.
+func DeleteClassHandler(c *gin.Context) {
+	classID, err := strconv.Atoi(c.Param("id"))
+	if err != nil || classID <= 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid class ID"})
+		return
+	}
+
+	userID := c.GetInt("user_id")
+	role := c.GetString("role")
+
+	if role != "teacher" && role != "admin" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Only teachers can delete classes"})
+		return
+	}
+
+	if err := DeleteClass(userID, classID); err != nil {
+		switch err.Error() {
+		case "unauthorized: you do not own this class":
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+		case "class not found":
+			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		default:
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete class"})
+		}
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Class deleted successfully"})
+}

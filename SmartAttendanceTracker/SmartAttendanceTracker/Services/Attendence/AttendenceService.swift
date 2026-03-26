@@ -13,11 +13,19 @@ class AttendenceService {
 
     private init() {}
 
-    func updateStudentAttendence(classId: Int, studentId: Int, state:String) async throws -> SuccessResponse {
+    func updateStudentAttendence(classId: Int, studentId: Int, state: String, bleId: String) async throws -> SuccessResponse {
         do {
-            let response:SuccessResponse = try await APIClient.shared.request(.updateAttendence(classId: classId, studentId: studentId, state: state))
+            // Create request body with ble_id required by backend
+            let body = try JSONEncoder().encode([
+                "status": state,
+                "ble_id": bleId,
+                "location": "{}"
+            ])
+            let response: SuccessResponse = try await APIClient.shared.request(
+                .updateAttendence(classId: classId, studentId: studentId, state: state),
+                body: body
+            )
             return response
-            
         } catch let networkError as NetworkError {
             throw networkError
         } catch {

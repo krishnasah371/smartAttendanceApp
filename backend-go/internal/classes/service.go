@@ -222,3 +222,15 @@ func GetActiveClassForBeacon(bleID string) (*ClassResponse, error) {
 
 	return FetchActiveClassByBLEID(bleID, currentDay, currentTime)
 }
+
+// DeleteClass validates ownership and deletes the class.
+func DeleteClass(teacherID, classID int) error {
+	owns, err := DoesTeacherOwnClass(teacherID, classID)
+	if err != nil {
+		return err
+	}
+	if !owns {
+		return errors.New("unauthorized: you do not own this class")
+	}
+	return RemoveClass(classID)
+}

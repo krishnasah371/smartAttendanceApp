@@ -17,7 +17,7 @@ enum Endpoint {
     case getClassAttendance(classId: Int)
     case updateAttendanceRecord(classId: Int, attendanceId: Int)
     case unenrollFromClass(classId: Int)
-    
+    case deleteClass(classId: Int)
 
 
     var path: String {
@@ -39,6 +39,7 @@ enum Endpoint {
         case .updateAttendanceRecord(let classId, let attendanceId):
             return "/classes/\(classId)/attendance/\(attendanceId)"
         case .unenrollFromClass(let classId): return "/classes/\(classId)/unenroll"
+        case .deleteClass(let classId): return "/classes/\(classId)"
         }
     }
 
@@ -49,12 +50,13 @@ enum Endpoint {
         case .updateAttendence: return "POST"
         case .updateAttendanceRecord: return "PUT"
         case .unenrollFromClass: return "DELETE"
+        case .deleteClass: return "DELETE"
         }
     }
 
     var requiresAuth: Bool {
         switch self {
-        case .getClasses,.enrollInAClass,.registerInAClass,.getUser, .getActiveClassForBeacon, .getAttendenceForDate, .getStudentsForClass, .getMyAttendance, .getClassAttendance, .updateAttendanceRecord, .unenrollFromClass:
+        case .getClasses,.enrollInAClass,.registerInAClass,.getUser, .getActiveClassForBeacon, .getAttendenceForDate, .getStudentsForClass, .getMyAttendance, .getClassAttendance, .updateAttendanceRecord, .unenrollFromClass, .deleteClass, .updateAttendence:
             return true
         default:
             return false

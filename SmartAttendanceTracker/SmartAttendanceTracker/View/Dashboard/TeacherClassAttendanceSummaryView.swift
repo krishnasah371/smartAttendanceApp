@@ -28,6 +28,12 @@ struct TeacherClassAttendanceSummaryView: View {
 
     // Maps student ID to their attendance percentage
     @State private var studentPercentages: [Int: Int] = [:]
+    
+    //Delete registered classes
+    @State private var showDeleteConfirmation = false
+    
+    @Environment(\.dismiss) var dismiss
+    let updateClassStatus: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -120,15 +126,35 @@ struct TeacherClassAttendanceSummaryView: View {
                                 .cornerRadius(10)
                             }
                         }
+                      
                     }
                 }
             }
             Spacer()
+            
+            Button(action: { showDeleteConfirmation = true }) {
+                Text("Delete Class")
+                    .font(.headline)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color.red.opacity(0.1))
+                    .foregroundColor(.red)
+                    .cornerRadius(10)
+            }
+            
         }
         .padding()
         // Load attendance dates when this view appears
         .onAppear {
             loadData()
+        }
+        .alert("Delete \(className)?", isPresented: $showDeleteConfirmation) {
+            Button("Cancel", role: .cancel) {}
+            Button("Delete", role: .destructive) {
+                Task { await deleteClass() }
+            }
+        } message: {
+            Text("This will permanently delete the class and all attendance records.")
         }
         // Navigate to AttendanceViewForDate when a date is tapped
         .navigationDestination(isPresented: $isAttendanceViewActive) {
@@ -193,6 +219,20 @@ struct TeacherClassAttendanceSummaryView: View {
             } catch {
                 print("❌ Failed to load data: \(error)")
             }
+        }
+    }
+    
+    //delete registered classes
+    private func deleteClass() async {
+        do {
+            _ = try await ClassService.shared.deleteClass(classId: classId)
+            await MainActor.run {
+                print("✅ Class deleted successfully")
+                updateClassStatus()
+                dismiss()
+            }
+        } catch {
+            print("❌ Delete failed: \(error)")
         }
     }
     // Formats a Date object into a readable string like "Mar 21, 2026"

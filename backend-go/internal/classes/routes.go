@@ -37,6 +37,8 @@ func RegisterRoutes(router *gin.RouterGroup) {
 
 		classGroup.GET("/:id/students", GetStudentsInClassHandler)
 
+		classGroup.DELETE("/:id", DeleteClassHandler)
+
 	}
 
 	log.Info().Msg("✅ Classes module initialized!")

@@ -135,8 +135,10 @@ struct BLE_StudentView: View {
         }
     }
     
+    
+    
     func hasCheckedInToday(classId: Int) -> Bool {
-        let key = "BLEClass_\(classId)"
+        let key = "BLEClass_\(user.id)_\(classId)"
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd"
         let today = formatter.string(from: Date())
@@ -148,7 +150,7 @@ struct BLE_StudentView: View {
     }
     
     func markCheckedIn(classId: Int) {
-        let key = "BLEClass_\(classId)"
+        let key = "BLEClass_\(user.id)_\(classId)"
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd"
         let today = formatter.string(from: Date())
@@ -159,56 +161,91 @@ struct BLE_StudentView: View {
     @State var elapsedTime: TimeInterval = 0
     
     func startRepeatingTask() {
-        elapsedTime = 0 // reset
-        timer?.invalidate() // stop any existing timer
+        // Reset elapsed time and stop any existing timer before starting a new one
+        // This prevents multiple timers from running simultaneously
+        elapsedTime = 0
+        timer?.invalidate()
         
+        // Start a new timer that fires every 2 seconds for up to 30 seconds
         timer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { t in
-            // ✅ Your repeating task here
-            if bleManager.discoveredDevices.count > 0 {
-                for device in bleManager.discoveredDevices {
-                    
-                    // triggers actual beacons
-                    let knownBeaconNames = ["Senior Seminar", "LIB317 - Senior Seminar"]
-                    if knownBeaconNames.contains(device.name) {
-                        Task {
-                            do {
-                                // Ask backend which class is active for this beacon RIGHT NOW
-                                let response: ActiveClassResponse = try await APIClient.shared.request(
-                                    .getActiveClassForBeacon(bleId: device.name == "Senior Seminar" ? "BCPro_207342" : device.name)
-                                )
-                                if let activeClass = response.classInfo {
-                                    // Mark attendance for that class
+            
+            // If no devices found yet, just increment time and check timeout
+            guard self.bleManager.discoveredDevices.count > 0 else {
+                self.elapsedTime += 2
+                if self.elapsedTime >= 30 {
+                    t.invalidate()
+                    print("✅ Done after 30 seconds")
+                }
+                return
+            }
+            
+            // Loop through all discovered BLE devices
+            for device in self.bleManager.discoveredDevices {
+                let hardwareId = device.hardwareId
+                
+                // Skip devices with empty hardware IDs
+                guard !hardwareId.isEmpty else { continue }
+                
+                Task {
+                    do {
+                        let response: ActiveClassResponse = try await APIClient.shared.request(
+                            .getActiveClassForBeacon(bleId: hardwareId)
+                        )
+                        
+                        if let activeClass = response.classInfo {
+                            print("🔍 Found active class: \(activeClass.name) (id: \(activeClass.id)) for user: \(self.user.id)")
+                            
+                            let alreadyCheckedIn = await MainActor.run {
+                                self.hasCheckedInToday(classId: activeClass.id)
+                            }
+                            
+                            print("🔍 Already checked in: \(alreadyCheckedIn) for class: \(activeClass.id), user: \(self.user.id)")
+                            
+                            if !alreadyCheckedIn {
+                                do {
+                                    // Try to mark attendance
                                     _ = try await AttendenceService.shared.updateStudentAttendence(
                                         classId: activeClass.id,
-                                        studentId: user.id,
-                                        state: "present"
+                                        studentId: self.user.id,
+                                        state: "present",
+                                        bleId: hardwareId
                                     )
+                                    // Success — update UI
                                     await MainActor.run {
-                                        markCheckedIn(classId: activeClass.id)
-                                        timer?.invalidate()
-                                        bannerColor = .green
-                                        bannerMessage = "✅ Attendance recorded for \(activeClass.name)!"
+                                        self.markCheckedIn(classId: activeClass.id)
+                                        self.timer?.invalidate()
+                                        self.bannerColor = .green
+                                        self.bannerMessage = "✅ Attendance recorded for \(activeClass.name)!"
+                                        self.updateClassStatus()
                                     }
-                                    // Wait 1 second then refresh dashboard
-                                    try? await Task.sleep(nanoseconds: 1_000_000_000)
+                                } catch {
+                                    // Could be "already marked today" from backend — still refresh UI
                                     await MainActor.run {
-                                        updateClassStatus()
+                                        self.timer?.invalidate()
+                                        self.bannerColor = .green
+                                        self.bannerMessage = "⚠️ Attendance already recorded for \(activeClass.name)!"
+                                        self.updateClassStatus()
                                     }
                                 }
-                            } catch {
+                            } else {
+                                // Already checked in locally — still refresh UI
                                 await MainActor.run {
-                                    bannerColor = .red
-                                    bannerMessage = "❌ Could not record attendance."
+                                    self.timer?.invalidate()
+                                    self.bannerColor = .green
+                                    self.bannerMessage = "⚠️ Already attended \(activeClass.name) today!"
+                                    self.updateClassStatus()
                                 }
                             }
                         }
+                    } catch {
+                        // No active class for this beacon — silently ignore
+                        print("ℹ️ No active class for beacon: \(hardwareId)")
                     }
-                    print(device)
                 }
             }
             
+            // Increment elapsed time and stop after 30 seconds
             self.elapsedTime += 2
-            
             if self.elapsedTime >= 30 {
                 t.invalidate()
                 print("✅ Done after 30 seconds")

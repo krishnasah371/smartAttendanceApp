@@ -455,23 +455,52 @@ func FetchActiveClassByBLEID(bleID string, currentDay string, currentTime string
 		}
 
 		// Parse the schedule JSON string
-		// Schedule looks like: {"tuesday": "09:00-10:30"}
-		var schedule map[string]string
+		// Handle both string and array formats
+		var schedule map[string][]string
 		if err := json.Unmarshal([]byte(class.Schedule), &schedule); err != nil {
-			continue
+			// Try parsing as map[string]string (old format)
+			var scheduleOld map[string]string
+			if err2 := json.Unmarshal([]byte(class.Schedule), &scheduleOld); err2 != nil {
+				continue
+			}
+			// Convert old format to new format
+			schedule = make(map[string][]string)
+			for k, v := range scheduleOld {
+				schedule[k] = []string{v}
+			}
 		}
 
-		// Check if current day has a slot and if current time falls within it
-		if slot, ok := schedule[currentDay]; ok {
-			parts := strings.Split(slot, "-")
-			if len(parts) == 2 {
-				if currentTime >= parts[0] && currentTime <= parts[1] {
-					log.Info().Str("ble_id", bleID).Str("class_name", class.Name).Msg("✅ Active class found for beacon")
-					return &class, nil
+		// Normalize schedule keys to lowercase for comparison
+		for scheduleDay, slots := range schedule {
+			if strings.ToLower(scheduleDay) == currentDay {
+				for _, slot := range slots {
+					parts := strings.Split(slot, "-")
+					if len(parts) == 2 {
+						if currentTime >= parts[0] && currentTime <= parts[1] {
+							log.Info().Str("ble_id", bleID).Str("class_name", class.Name).Msg("✅ Active class found for beacon")
+							return &class, nil
+						}
+					}
 				}
 			}
 		}
 	}
 
 	return nil, errors.New("no active class found for this beacon at current time")
+}
+
+// RemoveClass deletes a class and all related data by ID.
+func RemoveClass(classID int) error {
+	query := `DELETE FROM classes WHERE id = $1`
+	result, err := database.DB.Exec(query, classID)
+	if err != nil {
+		log.Error().Err(err).Int("class_id", classID).Msg("❌ Failed to delete class")
+		return err
+	}
+	rows, _ := result.RowsAffected()
+	if rows == 0 {
+		return errors.New("class not found")
+	}
+	log.Info().Int("class_id", classID).Msg("✅ Class deleted successfully")
+	return nil
 }

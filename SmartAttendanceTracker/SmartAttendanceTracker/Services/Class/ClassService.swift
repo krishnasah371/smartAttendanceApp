@@ -79,4 +79,17 @@ class ClassService {
             throw NetworkError.serverError("Failed to unenroll from class.")
         }
     }
+    
+    func deleteClass(classId: Int) async throws -> SuccessResponse {
+        do {
+            let response: SuccessResponse = try await APIClient.shared.request(
+                .deleteClass(classId: classId)
+            )
+            return response
+        } catch let networkError as NetworkError {
+            throw networkError
+        } catch {
+            throw NetworkError.serverError("Failed to delete class.")
+        }
+    }
 }
