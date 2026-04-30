@@ -2,6 +2,8 @@ package attendance
 
 import (
 	"errors"
+	"strconv"
+	"time"
 
 	"github.com/krishnasah371/smartAttendanceApp/backend/internal/classes"
 )
@@ -18,12 +20,12 @@ func MarkAttendanceForStudent(studentID, classID int, status string, location an
 		return errors.New("you are not enrolled in this class")
 	}
 
-	// Fetch expected BLE ID from the class
-	expectedBLEID, err := classes.GetClassBLEID(classID)
-	if err != nil {
-		return err
+	// Check active session first — enforces time window
+	sessionBLEID := getSession(strconv.Itoa(classID), time.Now().Format("2006-01-02"))
+	if sessionBLEID == "" {
+		return errors.New("no active attendance session — ask your teacher to start one")
 	}
-	if expectedBLEID != receivedBLEID {
+	if sessionBLEID != receivedBLEID {
 		return errors.New("invalid BLE device — you are not near the class")
 	}
 

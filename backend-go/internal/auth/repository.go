@@ -8,7 +8,6 @@ import (
 )
 
 // RegisterUser inserts a new user into the database with hashed password.
-//
 // It takes user details (name, email, passwordHash, role) and stores them in the database.
 // Logs success or failure messages accordingly.
 func RegisterUser(name, email, passwordHash, role string) error {

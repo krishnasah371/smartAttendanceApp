@@ -216,7 +216,7 @@ struct BLE_StudentView: View {
                                         self.timer?.invalidate()
                                         self.bannerColor = .green
                                         self.bannerMessage = "✅ Attendance recorded for \(activeClass.name)!"
-                                        self.updateClassStatus()
+                                
                                     }
                                 } catch {
                                     // Could be "already marked today" from backend — still refresh UI
